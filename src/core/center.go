@@ -9,7 +9,11 @@ type Center struct {
 
 // NewCenter creates a Center instance
 func NewCenter(id int, name string, strategy CenterStrategy) *Center {
-	return &Center{}
+	return &Center{
+		ID:       id,
+		Name:     name,
+		Strategy: strategy,
+	}
 }
 
 // NewTeamID is
@@ -30,4 +34,25 @@ func (c *Center) Act(action *Action) error {
 // Battle is
 func (c *Center) Battle(team TeamAgent) (*Team, error) {
 	return c.Strategy.Battle(team)
+}
+
+// CenterService is
+type CenterService struct {
+	ID       int
+	Name     string
+	Strategy CenterStrategy
+}
+
+// NewCenter creates a Center instance
+func NewCenterService(id int, name string, strategy CenterStrategy) *Center {
+	return &Center{
+		ID:       id,
+		Name:     name,
+		Strategy: strategy,
+	}
+}
+
+// NewTeamID is
+func (c *CenterService) NewTeamID() int {
+	return c.Strategy.NewTeamID()
 }

@@ -18,6 +18,10 @@ type ClientStrategy interface {
 type CenterAgent interface {
 	Register(registration *Registration) error
 	Act(action *Action) error
+	OnMessage(msgCh chan Message)
+	OffMessage(msgCh chan Message)
+	OnError(errCh chan error)
+	OffError(errCh chan error)
 }
 
 // CenterStrategy is

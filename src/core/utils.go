@@ -61,31 +61,3 @@ func splitMsgSample(data []byte, atEOF bool) (int, []byte, error) {
 
 	return totalSize, msgBytes, nil
 }
-
-// ErrBrokenMsg is
-var ErrBrokenMsg = errors.New("broken message")
-
-func splitMsg(data []byte, atEOF bool) (int, []byte, error) {
-	l := len(data)
-	if atEOF && l < 5 {
-		return 0, nil, ErrBrokenMsg
-	}
-
-	size, err := strconv.ParseInt(string(data[:5]), 10, 32)
-	if err != nil {
-		return 0, nil, errors.New("invalid message: " + err.Error())
-	}
-
-	totalSize := int(size + 5)
-	if totalSize > l {
-		if atEOF {
-			return 0, nil, ErrBrokenMsg
-		}
-		return 0, nil, nil
-	}
-
-	msgBytes := make([]byte, size, size)
-	copy(msgBytes, data[5:totalSize])
-
-	return totalSize, msgBytes, nil
-}
