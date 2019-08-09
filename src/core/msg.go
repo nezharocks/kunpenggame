@@ -12,6 +12,10 @@ const MaxJSONLen = 100000 - 1
 const MsgHeadLen = 5
 
 const (
+
+	// InvitationName is invitation message's type name
+	InvitationName = "invitation"
+
 	// RegistrationName is registration message's type name
 	RegistrationName = "registration"
 
@@ -53,6 +57,8 @@ func ParseMessageOnWire(bytes []byte) (*Message, error) {
 
 func (m *Message) substantiatePayload() (err error) {
 	switch m.Name {
+	case InvitationName:
+		_, err = m.Invitation()
 	case RegistrationName:
 		_, err = m.Registration()
 	case LegStartName:
@@ -192,6 +198,18 @@ func (m *Message) checkType(typeWanted string) error {
 		return fmt.Errorf("message error - unmatched type conversion, want %q, actual %q", typeWanted, m.Name)
 	}
 	return nil
+}
+
+// Invitation returns the pointer of the un-marshaled Invitation message.
+func (m *Message) Invitation() (*Invitation, error) {
+	if err := m.checkType(InvitationName); err != nil {
+		return nil, err
+	}
+	if m.Raw == false {
+		return m.Payload.(*Invitation), nil
+	}
+	obj := new(Invitation)
+	return obj, m.unmarshalPayload(obj)
 }
 
 // Registration returns the pointer of the un-marshaled Registration message.

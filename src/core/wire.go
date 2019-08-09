@@ -83,8 +83,6 @@ func msgSplit(data []byte, atEOF bool) (int, []byte, error) {
 	}
 
 	msgBytes := make([]byte, size, size)
-	// copy(msgBytes, data[5:totalSize])
 	copy(msgBytes, data[:totalSize])
-
 	return totalSize, msgBytes, nil
 }

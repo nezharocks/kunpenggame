@@ -7,16 +7,30 @@ type TeamSimple struct {
 }
 
 // NewTeamSimple creates a TeamSimple instance
-func NewTeamSimple(id int, name string) *TeamSimple {
+func NewTeamSimple(name string) *TeamSimple {
 	return &TeamSimple{
-		ID:   id,
 		Name: name,
 	}
 }
 
-// GetRegistration is
-func (t *TeamSimple) GetRegistration() *Registration {
-	return &Registration{t.ID, t.Name}
+// GetID is
+func (t *TeamSimple) GetID() int {
+	return t.ID
+}
+
+// GetName is
+func (t *TeamSimple) GetName() string {
+	return t.Name
+}
+
+// SetID is
+func (t *TeamSimple) SetID(id int) {
+	t.ID = id
+}
+
+// GameStart is
+func (t *TeamSimple) GameStart() {
+	// todo
 }
 
 // LegStart is
@@ -38,7 +52,7 @@ func (t *TeamSimple) Round(round *Round) (*Action, error) {
 }
 
 // GameOver is
-func (t *TeamSimple) GameOver() error {
+func (t *TeamSimple) GameOver(gameOver *GameOver) error {
 	// todo
 	return nil
 }

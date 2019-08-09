@@ -88,6 +88,11 @@ func (a *TeamAgentImpl) GetErrCh() chan error {
 	return a.ErrCh
 }
 
+// Invitation sends the Invitation message to the team
+func (a *TeamAgentImpl) Invitation(invitation *Invitation) error {
+	return a.Wire.Send(invitation.Message())
+}
+
 // LegStart sends the LegStart message to the team
 func (a *TeamAgentImpl) LegStart(legStart *LegStart) error {
 	return a.Wire.Send(legStart.Message())
@@ -109,6 +114,7 @@ func (a *TeamAgentImpl) GameOver(gameOver *GameOver) error {
 }
 
 // Disconnect is
-func (a *TeamAgentImpl) Disconnect() {
+func (a *TeamAgentImpl) Disconnect() error {
 	// todo
+	return nil
 }

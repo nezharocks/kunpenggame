@@ -33,6 +33,17 @@ func (g *GameService) Serve() {
 		go func() {
 			wire := NewWire(conn, defaultBufferSize)
 			teamAgent := NewTeamAgentImpl(wire)
+
+			if NetworkMode {
+				inv := &Invitation{g.Game.NewTeamID()}
+				err := teamAgent.Invitation(inv)
+				if err != nil {
+					log.Println(err)
+					teamAgent.Disconnect()
+					return
+				}
+			}
+
 		reg_wait:
 			for {
 				select {

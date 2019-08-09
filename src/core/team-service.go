@@ -1,7 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"log"
+	"time"
 )
 
 const defaultBufferSize = 1024 * 10
@@ -36,25 +38,31 @@ func (t *TeamService) Start() error {
 	// 	return err
 	// }
 
-	/*
-	 * bind center-message handler and error handler
-	 */
-	t.GameAgent.OnMessage(t.MsgCh)
-	t.GameAgent.OnError(t.ErrCh)
+	// wait for invitation to set team ID
+	if NetworkMode {
+		select {
+		case inv := <-t.GameAgent.GetInvitationCh():
+			t.Team.SetID(inv.TeamID)
+		case <-time.After(time.Second * 5):
+			log.Println("team service - ignore waiting for invitation")
+		}
+	}
 
-	/*
-	 * register team
-	 */
-	reg := t.Team.GetRegistration()
-	err := t.GameAgent.Register(reg)
+	// register the team
+	err := t.GameAgent.Registration(&Registration{t.Team.GetID(), t.Team.GetName()})
 	if err != nil {
 		log.Println(err) // todo
+		err = t.GameAgent.Disconnect()
+		if err != nil {
+			log.Println(err) // todo
+		}
 		return err
 	}
 
-	/*
-	 * handle the coming messages
-	 */
+	// start a game battle
+	go t.Team.GameStart()
+
+	// Wait and process the incoming messsages from game server
 	go t.Handle()
 
 	return nil
@@ -63,8 +71,6 @@ func (t *TeamService) Start() error {
 // Stop is
 func (t *TeamService) Stop() {
 	t.StopCh <- struct{}{}
-	t.GameAgent.OffMessage(t.MsgCh)
-	t.GameAgent.OffError(t.ErrCh)
 }
 
 // Handle is
@@ -72,85 +78,82 @@ func (t *TeamService) Handle() {
 loop:
 	for {
 		select {
-		case msg := <-t.MsgCh:
-			switch msg.Name {
-			case LegStartName:
-				legStart, err := msg.LegStart()
+		case legStart := <-t.GameAgent.GetLegStartCh():
+			go t.Team.LegStart(&legStart)
+		case legEnd := <-t.GameAgent.GetLegEndCh():
+			go t.Team.LegEnd(&legEnd)
+		case round := <-t.GameAgent.GetRoundCh():
+			go func() {
+				action, err := t.Team.Round(&round)
 				if err != nil {
 					t.ErrCh <- err
-					continue loop
+					return
 				}
-				if err := t.Team.LegStart(legStart); err != nil {
-					t.ErrCh <- err
-				}
-			case LegEndName:
-				legEnd, err := msg.LegEnd()
-				if err != nil {
-					t.ErrCh <- err
-					continue loop
-				}
-				if err := t.Team.LegEnd(legEnd); err != nil {
-					t.ErrCh <- err
-				}
-			case RoundName:
-				round, err := msg.Round()
-				if err != nil {
-					t.ErrCh <- err
-					continue loop
-				}
-				action, err := t.Team.Round(round)
-				if err != nil {
-					t.ErrCh <- err
-					continue loop
-				}
-				err = t.GameAgent.Act(action)
-				if err != nil {
-					t.ErrCh <- err
-				}
-			case GameOverName:
-				gameOver, err := msg.GameOver()
-				if err != nil {
-					t.ErrCh <- err
-				}
-				err = t.Team.GameOver(gameOver)
-				if err != nil {
-					t.ErrCh <- err
-				}
-				go t.Stop()
-			default:
-				log.Printf("message error - unknown message %q with msg data:\n%v", msg.Name, msg.String())
-			}
-		case err := <-t.ErrCh:
-			log.Println(err) // todo
+				t.GameAgent.Action(action)
+			}()
+		case gameOver := <-t.GameAgent.GetGameOverCh():
+			go t.Team.GameOver(&gameOver)
+			break
+		case err := <-t.GameAgent.GetErrorCh():
+			fmt.Printf("ERROR: %v", err) // todo
 		case <-t.StopCh:
 			break loop
 		}
 	}
-	// select {
-	// case legStart := <-t.GameAgent.LegStartCh:
-	// 	if err := t.Team.LegStart(&legStart); err != nil {
-	// 		t.GameAgent.ErrCh <- err
+
+	// case msg := <-t.MsgCh:
+	// 	switch msg.Name {
+	// 	case LegStartName:
+	// 		legStart, err := msg.LegStart()
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 			continue loop
+	// 		}
+	// 		if err := t.Team.LegStart(legStart); err != nil {
+	// 			t.ErrCh <- err
+	// 		}
+	// 	case LegEndName:
+	// 		legEnd, err := msg.LegEnd()
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 			continue loop
+	// 		}
+	// 		if err := t.Team.LegEnd(legEnd); err != nil {
+	// 			t.ErrCh <- err
+	// 		}
+	// 	case RoundName:
+	// 		round, err := msg.Round()
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 			continue loop
+	// 		}
+	// 		action, err := t.Team.Round(round)
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 			continue loop
+	// 		}
+	// 		err = t.GameAgent.Action(action)
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 		}
+	// 	case GameOverName:
+	// 		gameOver, err := msg.GameOver()
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 		}
+	// 		err = t.Team.GameOver(gameOver)
+	// 		if err != nil {
+	// 			t.ErrCh <- err
+	// 		}
+	// 		go t.Stop()
+	// 	default:
+	// 		log.Printf("message error - unknown message %q with msg data:\n%v", msg.Name, msg.String())
 	// 	}
-	// case legEnd := <-t.GameAgent.LegEndCh:
-	// 	if err := t.Team.LegEnd(&legEnd); err != nil {
-	// 		t.GameAgent.ErrCh <- err
-	// 	}
-	// case round := <-t.GameAgent.RoundCh:
-	// 	action, err := t.Team.Round(&round)
-	// 	if err != nil {
-	// 		t.GameAgent.ErrCh <- err
-	// 		break
-	// 	}
-	// 	if err := t.GameAgent.Act(action); err != nil {
-	// 		t.GameAgent.ErrCh <- err
-	// 	}
-	// case <-t.GameAgent.GameOverCh:
-	// 	if err := t.Team.GameOver(); err != nil {
-	// 		t.GameAgent.ErrCh <- err
-	// 	}
-	// 	break
-	// case err := <-t.GameAgent.ErrCh:
-	// 	fmt.Printf("ERROR: %v", err) // todo
+	// case err := <-t.ErrCh:
+	// 	log.Println(err) // todo
+	// case <-t.StopCh:
+	// 	break loop
 	// }
 	// }
+
 }

@@ -57,6 +57,16 @@ type Player struct {
 	Y     int `json:"y"`
 }
 
+// Invitation is
+type Invitation struct {
+	TeamID int `json:"team_id"`
+}
+
+// Message returns the pointer of the generated message of the Invitation object
+func (m *Invitation) Message() *Message {
+	return &Message{InvitationName, m, false}
+}
+
 // Registration is
 type Registration struct {
 	TeamID   int    `json:"team_id"`
