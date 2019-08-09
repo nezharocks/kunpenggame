@@ -9,7 +9,7 @@ import (
 func Test_sendMsg(t *testing.T) {
 	type args struct {
 		w   *bufio.Writer
-		msg *APIMsg
+		msg *Message
 	}
 	tests := []struct {
 		name    string
@@ -20,9 +20,9 @@ func Test_sendMsg(t *testing.T) {
 			name: "sendMsg - succeed to send a registration msg",
 			args: args{
 				w: bufio.NewWriterSize(new(bytes.Buffer), 1024*10),
-				msg: &APIMsg{
+				msg: &Message{
 					Name: "registration",
-					Data: Registration{
+					Payload: &Registration{
 						TeamID:   1001,
 						TeamName: "daolaji",
 					},

@@ -30,7 +30,7 @@ func NewWire(rw io.ReadWriter, bufferSize int) *Wire {
 
 // Send sends message to the wire
 func (w *Wire) Send(msg *Message) error {
-	wireBytes, err := msg.Bytes()
+	wireBytes, err := msg.BytesOnWire()
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (w *Wire) Receive() {
 	scanner := bufio.NewScanner(w.Reader)
 	scanner.Split(msgSplit)
 	for scanner.Scan() {
-		msg, err := ParseMessage(scanner.Bytes())
+		msg, err := ParseMessageOnWire(scanner.Bytes())
 		if err != nil {
 			w.ErrCh <- err
 			continue
@@ -83,7 +83,8 @@ func msgSplit(data []byte, atEOF bool) (int, []byte, error) {
 	}
 
 	msgBytes := make([]byte, size, size)
-	copy(msgBytes, data[5:totalSize])
+	// copy(msgBytes, data[5:totalSize])
+	copy(msgBytes, data[:totalSize])
 
 	return totalSize, msgBytes, nil
 }

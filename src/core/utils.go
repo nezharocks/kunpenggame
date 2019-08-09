@@ -10,7 +10,7 @@ import (
 )
 
 // todo
-func sendMsg(w *bufio.Writer, msg *APIMsg) error {
+func sendMsg(w *bufio.Writer, msg *Message) error {
 	msgBytes, err := json.Marshal(&msg)
 	if err != nil {
 		return err

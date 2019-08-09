@@ -65,10 +65,7 @@ type Registration struct {
 
 // Message returns the pointer of the generated message of the Registration object
 func (m *Registration) Message() *Message {
-	msg := new(Message)
-	msg.Name = RegistrationName
-	msg.Payload = m
-	return msg
+	return &Message{RegistrationName, m, false}
 }
 
 // LegStart is
@@ -79,10 +76,7 @@ type LegStart struct {
 
 // Message returns the pointer of the generated message of the LegStart object
 func (m *LegStart) Message() *Message {
-	msg := new(Message)
-	msg.Name = LegStartName
-	msg.Payload = m
-	return msg
+	return &Message{LegStartName, m, false}
 }
 
 // LegEnd is
@@ -92,10 +86,7 @@ type LegEnd struct {
 
 // Message returns the pointer of the generated message of the LegEnd object
 func (m *LegEnd) Message() *Message {
-	msg := new(Message)
-	msg.Name = LegEndName
-	msg.Payload = m
-	return msg
+	return &Message{LegEndName, m, false}
 }
 
 // Round is
@@ -109,10 +100,7 @@ type Round struct {
 
 // Message returns the pointer of the generated message of the Round object
 func (m *Round) Message() *Message {
-	msg := new(Message)
-	msg.Name = RoundName
-	msg.Payload = m
-	return msg
+	return &Message{RoundName, m, false}
 }
 
 // Action is
@@ -123,10 +111,7 @@ type Action struct {
 
 // Message returns the pointer of the generated message of the Action object
 func (m *Action) Message() *Message {
-	msg := new(Message)
-	msg.Name = ActionName
-	msg.Payload = m
-	return msg
+	return &Message{ActionName, m, false}
 }
 
 // GameOver is
@@ -134,10 +119,7 @@ type GameOver struct{}
 
 // Message returns the pointer of the generated message of the GameOver object
 func (m *GameOver) Message() *Message {
-	msg := new(Message)
-	msg.Name = GameOverName
-	msg.Payload = m
-	return msg
+	return &Message{GameOverName, m, false}
 }
 
 // PlayerAction is
@@ -146,12 +128,3 @@ type PlayerAction struct {
 	Player int      `json:"player_id"`
 	Move   []string `json:"move"`
 }
-
-// APIMsg is
-type APIMsg struct {
-	Name string     `json:"msg_name"`
-	Data APIMsgData `json:"msg_data"`
-}
-
-// APIMsgData is
-type APIMsgData interface{}
