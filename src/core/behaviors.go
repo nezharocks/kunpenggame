@@ -29,6 +29,7 @@ type TeamStrategy interface {
 
 // GameAgent is
 type GameAgent interface {
+	Connect() error
 	Disconnect() error
 	Registration(registration *Registration) error
 	Action(action *Action) error

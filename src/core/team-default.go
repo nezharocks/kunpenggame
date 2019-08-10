@@ -1,5 +1,10 @@
 package core
 
+import (
+	"fmt"
+	"log"
+)
+
 // TeamSimple is
 type TeamSimple struct {
 	ID   int
@@ -31,6 +36,7 @@ func (t *TeamSimple) SetID(id int) {
 // GameStart is
 func (t *TeamSimple) GameStart() {
 	// todo
+	log.Printf("team %q's game battle is started", fmt.Sprintf("%v:%v", t.ID, t.Name))
 }
 
 // LegStart is
@@ -48,11 +54,12 @@ func (t *TeamSimple) LegEnd(legEnd *LegEnd) error {
 // Round is
 func (t *TeamSimple) Round(round *Round) (*Action, error) {
 	// todo
-	return nil, nil
+	return &Action{}, nil
 }
 
 // GameOver is
 func (t *TeamSimple) GameOver(gameOver *GameOver) error {
 	// todo
+	log.Printf("team %q's game battle is over", fmt.Sprintf("%v:%v", t.ID, t.Name))
 	return nil
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"log"
 
 	core "../core"
 )
@@ -16,15 +14,8 @@ var (
 )
 
 func main() {
-	address := fmt.Sprintf("%v:%v", ip, port)
-	log.Printf("team %q is connecting to game server on %v ...", name, address)
 	team := core.NewTeamSimple(name)
 	gameAgent := core.NewGameAgentImpl(id, name, ip, port)
-	err := gameAgent.Connect()
-	if err != nil {
-		log.Println(err)
-		return
-	}
 	teamService := core.NewTeamService(team, gameAgent)
 	teamService.Start()
 }

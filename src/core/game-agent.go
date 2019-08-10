@@ -7,19 +7,21 @@ import (
 	"time"
 )
 
+const defaultBufferSize = 1024 * 10
+
+const defaultConnRetries = 30
+
 // GameAgentImpl is
 type GameAgentImpl struct {
-	TeamID      int
-	TeamName    string
-	ServerIP    string
-	ServerPort  int
-	Conn        net.Conn
-	Connected   bool
-	DialRetries int
-	BufferSize  int
-	Wire        *Wire
-	// MsgChs       []chan Message
-	// ErrChs       []chan error
+	TeamID       int
+	TeamName     string
+	ServerIP     string
+	ServerPort   int
+	Conn         net.Conn
+	Connected    bool
+	DialRetries  int
+	BufferSize   int
+	Wire         *Wire
 	InvitationCh chan Invitation
 	LegStartCh   chan LegStart
 	LegEndCh     chan LegEnd
@@ -70,7 +72,7 @@ func (a *GameAgentImpl) Connect() (err error) {
 			return nil
 		}
 	}
-	return fmt.Errorf("team (%v) client is connected to game server@%v, error: %v", teamDesc, address, err)
+	return fmt.Errorf("team (%v) client failed to connect to game server@%v, error: %v", teamDesc, address, err)
 }
 
 // Disconnect is
@@ -92,36 +94,6 @@ func (a *GameAgentImpl) Disconnect() (err error) {
 	return nil
 }
 
-// OnMessage binds message handler by adding Message channel
-// func (a *GameAgentImpl) OnMessage(msgCh chan Message) {
-// 	a.MsgChs = append(a.MsgChs, msgCh)
-// }
-
-// OffMessage unbinds message handler by removing Message channel
-// func (a *GameAgentImpl) OffMessage(msgCh chan Message) {
-// 	for i, ch := range a.MsgChs {
-// 		if ch == msgCh {
-// 			a.MsgChs = append(a.MsgChs[:i], a.MsgChs[i+1:]...)
-// 			break
-// 		}
-// 	}
-// }
-
-// OnError binds error handler by adding error channel
-// func (a *GameAgentImpl) OnError(errCh chan error) {
-// 	a.ErrChs = append(a.ErrChs, errCh)
-// }
-
-// OffError unbinds error handler by removing error channel
-// func (a *GameAgentImpl) OffError(errCh chan error) {
-// 	for i, ch := range a.ErrChs {
-// 		if ch == errCh {
-// 			a.ErrChs = append(a.ErrChs[:i], a.ErrChs[i+1:]...)
-// 			break
-// 		}
-// 	}
-// }
-
 // Registration is
 func (a *GameAgentImpl) Registration(registration *Registration) error {
 	return a.Wire.Send(registration.Message())
@@ -131,22 +103,6 @@ func (a *GameAgentImpl) Registration(registration *Registration) error {
 func (a *GameAgentImpl) Action(action *Action) error {
 	return a.Wire.Send(action.Message())
 }
-
-// func (a *GameAgentImpl) emitMessage(msg Message) {
-// 	for _, handler := range a.MsgChs {
-// 		go func(handler chan Message) {
-// 			handler <- msg
-// 		}(handler)
-// 	}
-// }
-
-// func (a *GameAgentImpl) emitError(err error) {
-// 	for _, handler := range a.ErrChs {
-// 		go func(handler chan error) {
-// 			handler <- err
-// 		}(handler)
-// 	}
-// }
 
 func (a *GameAgentImpl) receive() {
 loop:
@@ -227,7 +183,7 @@ func (a *GameAgentImpl) GetGameOverCh() chan GameOver {
 	return a.GameOverCh
 }
 
-// GetGameOverCh is
+// GetErrorCh is
 func (a *GameAgentImpl) GetErrorCh() chan error {
 	return a.ErrorCh
 }
