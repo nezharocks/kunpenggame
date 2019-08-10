@@ -21,21 +21,21 @@ func NewGameService(game GameStrategy, ln net.Listener) *GameService {
 }
 
 // Serve is
-func (g *GameService) Serve() {
+func (s *GameService) Serve() {
 	for {
-		conn, err := g.Listener.Accept()
+		conn, err := s.Listener.Accept()
 		if err != nil {
-			// todo logging
-			log.Println(err)
+			log.Println(err) // todo logging
 			continue
 		}
 
 		go func() {
 			wire := NewWire(conn, defaultBufferSize)
+			go wire.Receive()
 			teamAgent := NewTeamAgentImpl(wire)
 
 			if NetworkMode {
-				inv := &Invitation{g.Game.NewTeamID()}
+				inv := &Invitation{s.Game.NewTeamID()}
 				err := teamAgent.Invitation(inv)
 				if err != nil {
 					log.Println(err)
@@ -59,7 +59,7 @@ func (g *GameService) Serve() {
 				teamAgent.Disconnect()
 				return
 			}
-			g.Game.Battle(teamAgent)
+			s.Game.Battle(teamAgent)
 		}()
 	}
 }

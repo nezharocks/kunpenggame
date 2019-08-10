@@ -59,20 +59,21 @@ func (a *GameAgentImpl) Connect() (err error) {
 		retries = defaultConnRetries
 	}
 
-	log.Printf("team (%v) client is connecting to game server@%v", teamDesc, address)
+	log.Printf("team client %v is connecting to game server@%v", teamDesc, address)
 	for i := 1; i <= retries; i++ {
 		a.Conn, err = net.DialTimeout("tcp4", address, time.Second*1)
 		if err != nil {
 			log.Printf("client dial error - try %vth time to dial %v, error: %v\n", i, address, err)
 		} else {
-			log.Printf("team (%v) client is connected to game server@%v", teamDesc, address)
+			log.Printf("team client %v is connected to game server@%v", teamDesc, address)
 			a.Wire = NewWire(a.Conn, a.BufferSize)
+			go a.Wire.Receive()
 			a.Connected = true
 			go a.receive()
 			return nil
 		}
 	}
-	return fmt.Errorf("team (%v) client failed to connect to game server@%v, error: %v", teamDesc, address, err)
+	return fmt.Errorf("team client %v failed to connect to game server@%v, error: %v", teamDesc, address, err)
 }
 
 // Disconnect is
@@ -80,17 +81,17 @@ func (a *GameAgentImpl) Disconnect() (err error) {
 	address := fmt.Sprintf("%s:%d", a.ServerIP, a.ServerPort)
 	teamDesc := fmt.Sprintf("%v:%v", a.TeamID, a.TeamName)
 	if !a.Connected {
-		log.Printf("team (%v) client is not connected to game server@%v, no need to disconnect", teamDesc, address)
+		log.Printf("team client %v is not connected to game server@%v, no need to disconnect", teamDesc, address)
 		return nil
 	}
 
 	if err = a.Conn.Close(); err != nil {
-		log.Printf("team (%v) client fails to disconnect game server@%v", teamDesc, address)
+		log.Printf("team client %v failed to disconnect game server@%v", teamDesc, address)
 		return err
 	}
 	a.Connected = false
 	a.StopCh <- struct{}{}
-	log.Printf("team (%v) client is disconnected to game server@%v", teamDesc, address)
+	log.Printf("team client %v is disconnected to game server@%v", teamDesc, address)
 	return nil
 }
 

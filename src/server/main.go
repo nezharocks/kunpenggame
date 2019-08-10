@@ -28,5 +28,4 @@ func main() {
 	gameImpl := core.NewGameImpl(name)
 	gameService := core.NewGameService(gameImpl, ln)
 	gameService.Serve()
-	// time.Sleep(time.Second * 5)
 }

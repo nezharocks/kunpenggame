@@ -14,7 +14,7 @@ var (
 )
 
 func main() {
-	team := core.NewTeamSimple(name)
+	team := core.NewTeamImpl(name)
 	gameAgent := core.NewGameAgentImpl(id, name, ip, port)
 	teamService := core.NewTeamService(team, gameAgent)
 	teamService.Start()

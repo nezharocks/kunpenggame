@@ -50,7 +50,7 @@ func ParseMessageOnWire(bytes []byte) (*Message, error) {
 	msg := &Message{Payload: new(json.RawMessage), Raw: true}
 	err := json.Unmarshal(bytes[MsgHeadLen:], &msg)
 	if err != nil {
-		return nil, fmt.Errorf("message error - fail to unmarshal bytes to message, error: %v", err)
+		return nil, fmt.Errorf("message error - fail to unmarshal bytes to message, error: %v\n%v", err, string(bytes))
 	}
 	return msg, msg.substantiatePayload()
 }

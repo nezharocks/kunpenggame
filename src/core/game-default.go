@@ -23,7 +23,7 @@ func (c *GameImpl) NewTeamID() int {
 
 // Battle is
 func (c *GameImpl) Battle(team TeamAgent) {
-	log.Printf("AI battle with %v/%v is starting...", team.GetTeamID(), team.GetTeamName())
+	log.Printf("the battle of AI vs. %v/%v is starting...", team.GetTeamID(), team.GetTeamName())
 
 	log.Println("Battle is ended")
 }

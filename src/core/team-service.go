@@ -24,120 +24,120 @@ func NewTeamService(team TeamStrategy, game GameAgent) *TeamService {
 }
 
 // Start is
-func (t *TeamService) Start() error {
-	err := t.GameAgent.Connect()
+func (s *TeamService) Start() error {
+	err := s.GameAgent.Connect()
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	go t.handleInternalMessages()
+	go s.handleInternalMessages()
 
-	t.waitInvitationFor(time.Second * 5)
+	s.waitInvitationFor(time.Second * 5)
 
 	// register the team
-	err = t.GameAgent.Registration(&Registration{t.Team.GetID(), t.Team.GetName()})
+	err = s.GameAgent.Registration(&Registration{s.Team.GetID(), s.Team.GetName()})
 	if err != nil {
 		log.Println(err) // todo
-		t.Stop()
+		s.Stop()
 	}
 
 	// start a game battle
-	go t.Team.GameStart()
+	go s.Team.GameStart()
 
 	// Wait and process the incoming messsages from game server
-	go t.handleExternalMessages()
+	go s.handleExternalMessages()
 
-	<-t.StopCh
+	<-s.StopCh
 	return nil
 }
 
 // Stop is
-func (t *TeamService) Stop() {
-	err := t.Team.GameOver(&GameOver{})
+func (s *TeamService) Stop() {
+	err := s.Team.GameOver(&GameOver{})
 	if err != nil {
 		log.Println(err) // todo
 	}
-	err = t.GameAgent.Disconnect()
+	err = s.GameAgent.Disconnect()
 	if err != nil {
 		log.Println(err) // todo
 	}
-	t.StopCh <- struct{}{}
-	t.StopCh <- struct{}{}
+	s.StopCh <- struct{}{}
+	s.StopCh <- struct{}{}
 }
 
-func (t *TeamService) handleInternalMessages() {
+func (s *TeamService) handleInternalMessages() {
 loop:
 	for {
 		select {
-		case err := <-t.ErrCh:
+		case err := <-s.ErrCh:
 			log.Println(err) // todo
-		case <-t.StopCh:
+		case <-s.StopCh:
 			break loop
 		}
 	}
 }
 
-func (t *TeamService) handleExternalMessages() {
+func (s *TeamService) handleExternalMessages() {
 loop:
 	for {
 		select {
-		case legStart := <-t.GameAgent.GetLegStartCh():
-			go t.onLegStart(&legStart)
-		case legEnd := <-t.GameAgent.GetLegEndCh():
-			go t.onLegEnd(&legEnd)
-		case round := <-t.GameAgent.GetRoundCh():
-			go t.onRound(&round)
-		case gameOver := <-t.GameAgent.GetGameOverCh():
-			go t.onGameOver(&gameOver)
-		case err := <-t.GameAgent.GetErrorCh():
-			t.ErrCh <- err
+		case legStart := <-s.GameAgent.GetLegStartCh():
+			go s.onLegStart(&legStart)
+		case legEnd := <-s.GameAgent.GetLegEndCh():
+			go s.onLegEnd(&legEnd)
+		case round := <-s.GameAgent.GetRoundCh():
+			go s.onRound(&round)
+		case gameOver := <-s.GameAgent.GetGameOverCh():
+			go s.onGameOver(&gameOver)
+		case err := <-s.GameAgent.GetErrorCh():
+			s.ErrCh <- err
 		case <-time.After(time.Second * 10): // server timeout
-			t.Stop()
-		case <-t.StopCh:
+			s.Stop()
+		case <-s.StopCh:
 			break loop
 		}
 	}
 }
 
 // wait invitation for some time to set team ID
-func (t *TeamService) waitInvitationFor(d time.Duration) {
+func (s *TeamService) waitInvitationFor(d time.Duration) {
 	if NetworkMode {
 		select {
-		case inv := <-t.GameAgent.GetInvitationCh():
-			t.Team.SetID(inv.TeamID)
+		case inv := <-s.GameAgent.GetInvitationCh():
+			s.Team.SetID(inv.TeamID)
 		case <-time.After(d):
 			log.Printf("team service - ignore waiting invitation for %v\n", d)
 		}
 	}
 }
 
-func (t *TeamService) onLegStart(legStart *LegStart) {
-	if err := t.Team.LegStart(legStart); err != nil {
-		t.ErrCh <- err
+func (s *TeamService) onLegStart(legStart *LegStart) {
+	if err := s.Team.LegStart(legStart); err != nil {
+		s.ErrCh <- err
 	}
 }
 
-func (t *TeamService) onLegEnd(legEnd *LegEnd) {
-	if err := t.Team.LegEnd(legEnd); err != nil {
-		t.ErrCh <- err
+func (s *TeamService) onLegEnd(legEnd *LegEnd) {
+	if err := s.Team.LegEnd(legEnd); err != nil {
+		s.ErrCh <- err
 	}
 }
 
-func (t *TeamService) onRound(round *Round) {
-	action, err := t.Team.Round(round)
+func (s *TeamService) onRound(round *Round) {
+	action, err := s.Team.Round(round)
 	if err != nil {
-		t.ErrCh <- err
+		s.ErrCh <- err
 		return
 	}
-	err = t.GameAgent.Action(action)
+	err = s.GameAgent.Action(action)
 	if err != nil {
-		t.ErrCh <- err
+		s.ErrCh <- err
 	}
 }
 
-func (t *TeamService) onGameOver(gameOver *GameOver) {
-	if err := t.Team.GameOver(gameOver); err != nil {
-		t.ErrCh <- err
+func (s *TeamService) onGameOver(gameOver *GameOver) {
+	if err := s.Team.GameOver(gameOver); err != nil {
+		s.ErrCh <- err
 	}
 }

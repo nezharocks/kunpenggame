@@ -3,62 +3,66 @@ package core
 import (
 	"fmt"
 	"log"
+	"time"
 )
 
-// TeamSimple is
-type TeamSimple struct {
-	ID   int
-	Name string
+// TeamImpl is
+type TeamImpl struct {
+	ID     int
+	Name   string
+	Battle *Battle
 }
 
-// NewTeamSimple creates a TeamSimple instance
-func NewTeamSimple(name string) *TeamSimple {
-	return &TeamSimple{
+// NewTeamImpl creates a TeamImpl instance
+func NewTeamImpl(name string) *TeamImpl {
+	return &TeamImpl{
 		Name: name,
 	}
 }
 
 // GetID is
-func (t *TeamSimple) GetID() int {
+func (t *TeamImpl) GetID() int {
 	return t.ID
 }
 
 // GetName is
-func (t *TeamSimple) GetName() string {
+func (t *TeamImpl) GetName() string {
 	return t.Name
 }
 
 // SetID is
-func (t *TeamSimple) SetID(id int) {
+func (t *TeamImpl) SetID(id int) {
 	t.ID = id
 }
 
 // GameStart is
-func (t *TeamSimple) GameStart() {
-	// todo
+func (t *TeamImpl) GameStart() {
+	t.Battle = NewBattle(t.ID, time.Now())
+
+	// todo init the game battle's algorithm impl here.
 	log.Printf("team %q's game battle is started", fmt.Sprintf("%v:%v", t.ID, t.Name))
 }
 
 // LegStart is
-func (t *TeamSimple) LegStart(legStart *LegStart) error {
-	// todo
+func (t *TeamImpl) LegStart(legStart *LegStart) error {
+	t.Battle.NewLeg(legStart)
 	return nil
 }
 
 // LegEnd is
-func (t *TeamSimple) LegEnd(legEnd *LegEnd) error {
+func (t *TeamImpl) LegEnd(legEnd *LegEnd) error {
 	// todo
 	return nil
 }
 
 // Round is
-func (t *TeamSimple) Round(round *Round) (*Action, error) {
+func (t *TeamImpl) Round(round *Round) (*Action, error) {
 	// todo
 	return &Action{}, nil
 }
 
 // GameOver is
-func (t *TeamSimple) GameOver(gameOver *GameOver) error {
+func (t *TeamImpl) GameOver(gameOver *GameOver) error {
 	// todo
 	log.Printf("team %q's game battle is over", fmt.Sprintf("%v:%v", t.ID, t.Name))
 	return nil
