@@ -51,8 +51,7 @@ func (t *TeamImpl) LegStart(legStart *LegStart) error {
 
 // LegEnd is
 func (t *TeamImpl) LegEnd(legEnd *LegEnd) error {
-	// todo
-	return nil
+	return t.Battle.EndLeg(legEnd)
 }
 
 // Round is

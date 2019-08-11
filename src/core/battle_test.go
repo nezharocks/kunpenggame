@@ -77,6 +77,37 @@ func mapExample() *Map {
 	return m
 }
 
+func battleWithStartedLeg(teamID int, battleTime time.Time) *Battle {
+	battle := NewBattle(teamID, battleTime)
+	legStart := &LegStart{
+		Map:   mapExample(),
+		Teams: teamsStartLegExample(),
+	}
+	battle.NewLeg(legStart)
+	return battle
+}
+
+func legStartExample() *LegStart {
+	return &LegStart{
+		Map:   mapExample(),
+		Teams: teamsStartLegExample(),
+	}
+}
+
+func legEndExample() *LegEnd {
+	return &LegEnd{
+		Teams: []*Team{
+			&Team{
+				ID:    100,
+				Point: 800,
+			},
+			&Team{
+				ID:    200,
+				Point: 400,
+			},
+		},
+	}
+}
 func TestNewBattle(t *testing.T) {
 	battleTime := time.Now()
 	type args struct {
@@ -111,6 +142,7 @@ func TestNewBattle(t *testing.T) {
 
 func TestBattle_NewLeg(t *testing.T) {
 	battleTime := time.Now()
+	sortedTeams := teamsLegExample()
 	type fields struct {
 		TeamID  int
 		Time    time.Time
@@ -134,15 +166,16 @@ func TestBattle_NewLeg(t *testing.T) {
 				Time:   battleTime,
 			},
 			args: args{
-				legStart: &LegStart{
-					Map:   mapExample(),
-					Teams: teamsStartLegExample(),
-				},
+				legStart: legStartExample(),
 			},
 			want: &Leg{
 				Index: 0,
 				Map:   mapExample(),
-				Teams: teamsLegExample(),
+				Teams: sortedTeams,
+				TeamMap: map[int]*Team{
+					sortedTeams[0].ID: sortedTeams[0],
+					sortedTeams[1].ID: sortedTeams[1],
+				},
 				Players: map[int]*Player{
 					1: &Player{Team: 100, ID: 1},
 					2: &Player{Team: 100, ID: 2},
@@ -170,6 +203,81 @@ func TestBattle_NewLeg(t *testing.T) {
 			// fmt.Printf("%v\n", tt.want.JSON())
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Battle.NewLeg() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBattle_EndLeg(t *testing.T) {
+	battleTime := time.Now()
+	sortedTeams := teamsLegExample()
+	battle := battleWithStartedLeg(100, battleTime)
+	sortedTeams[0].Point = 800
+	sortedTeams[1].Point = 400
+	type fields struct {
+		TeamID  int
+		Time    time.Time
+		Teams   []*Team
+		Legs    []*Leg
+		Current *Leg
+	}
+	type args struct {
+		legEnd *LegEnd
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Leg
+		wantErr bool
+	}{
+		{
+			name: "EndLeg - ok",
+			fields: fields{
+				TeamID:  100,
+				Time:    battleTime,
+				Teams:   battle.Teams,
+				Legs:    battle.Legs,
+				Current: battle.Current,
+			},
+			args: args{
+				legEnd: legEndExample(),
+			},
+			want: &Leg{
+				Index: 0,
+				Map:   mapExample(),
+				Teams: sortedTeams,
+				TeamMap: map[int]*Team{
+					sortedTeams[0].ID: sortedTeams[0],
+					sortedTeams[1].ID: sortedTeams[1],
+				},
+				Players: map[int]*Player{
+					1: &Player{Team: 100, ID: 1},
+					2: &Player{Team: 100, ID: 2},
+					3: &Player{Team: 100, ID: 3},
+					4: &Player{Team: 100, ID: 4},
+					5: &Player{Team: 200, ID: 5},
+					6: &Player{Team: 200, ID: 6},
+					7: &Player{Team: 200, ID: 7},
+					8: &Player{Team: 200, ID: 8},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Battle{
+				TeamID:  tt.fields.TeamID,
+				Time:    tt.fields.Time,
+				Teams:   tt.fields.Teams,
+				Legs:    tt.fields.Legs,
+				Current: tt.fields.Current,
+			}
+			if err := b.EndLeg(tt.args.legEnd); (err != nil) != tt.wantErr {
+				t.Errorf("Battle.EndLeg() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(b.Current, tt.want) {
+				t.Errorf("Battle.EndLeg() = %v, want %v", b.Current, tt.want)
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -27,6 +28,7 @@ type Leg struct {
 	Index   int
 	Map     *Map
 	Teams   []*Team
+	TeamMap map[int]*Team
 	Players map[int]*Player
 	Rounds  []*LegRound
 	Current *LegRound
@@ -47,14 +49,16 @@ type LegRound struct {
 // NewLeg is
 func (b *Battle) NewLeg(legStart *LegStart) *Leg {
 	leg := &Leg{
-		Index: len(b.Legs),
-		Map:   legStart.Map,
-		Teams: make([]*Team, 0, 2),
+		Index:   len(b.Legs),
+		Map:     legStart.Map,
+		Teams:   make([]*Team, 0, 2),
+		TeamMap: make(map[int]*Team, 2),
 	}
 
 	// ensure the current (guest) team is the first item in leg.Teams slice
 	otherTeams := make([]*Team, 0)
 	for _, team := range legStart.Teams {
+		leg.TeamMap[team.ID] = team
 		if team.ID == b.TeamID {
 			leg.Teams = append(leg.Teams, team)
 		} else {
@@ -92,4 +96,19 @@ func (b *Battle) NewLeg(legStart *LegStart) *Leg {
 	b.Legs = append(b.Legs, leg)
 	b.Current = leg
 	return leg
+}
+
+// EndLeg is
+func (b *Battle) EndLeg(legEnd *LegEnd) error {
+	if b.Current == nil {
+		return fmt.Errorf("battle state illegal - the battle has no any started legs")
+	}
+	for _, t1 := range legEnd.Teams {
+		t2, ok := b.Current.TeamMap[t1.ID]
+		if !ok {
+			continue
+		}
+		t2.Point = t1.Point
+	}
+	return nil
 }
