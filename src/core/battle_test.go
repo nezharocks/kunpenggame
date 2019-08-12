@@ -45,11 +45,11 @@ func mapExample() *Map {
 		Width:  15,
 		Height: 15,
 		Vision: 3,
-		Meteor: []*Meteor{
+		Meteors: []*Meteor{
 			&Meteor{1, 1},
 			&Meteor{1, 4},
 		},
-		Tunnel: []*Tunnel{
+		Tunnels: []*Tunnel{
 			&Tunnel{
 				X:         3,
 				Y:         1,
@@ -61,7 +61,7 @@ func mapExample() *Map {
 				Direction: "down",
 			},
 		},
-		Wormhole: []*Wormhole{
+		Wormholes: []*Wormhole{
 			&Wormhole{
 				Name: "a",
 				X:    4,
