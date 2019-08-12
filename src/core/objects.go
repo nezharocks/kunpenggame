@@ -13,13 +13,6 @@ type Meteor struct {
 	Y int `json:"y"`
 }
 
-// Tunnel is
-type Tunnel struct {
-	Direction string `json:"direction"`
-	X         int    `json:"x"`
-	Y         int    `json:"y"`
-}
-
 // Wormhole is
 type Wormhole struct {
 	Name string `json:"name"`
@@ -27,18 +20,14 @@ type Wormhole struct {
 	Y    int    `json:"y"`
 }
 
-// Map is
-type Map struct {
-	Width     int         `json:"width"`
-	Height    int         `json:"height"`
-	Vision    int         `json:"vision"`
-	Meteors   []*Meteor   `json:"meteor"`
-	Tunnels   []*Tunnel   `json:"tunnel"`
-	Wormholes []*Wormhole `json:"wormhole"`
-	Powers    []*Power    `json:"-"`
+// PlaceHolder is
+type PlaceHolder struct {
+	Name string `json:"name"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
 }
 
-// Team is ,omitempty
+// Team is
 type Team struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name,omitempty"`
