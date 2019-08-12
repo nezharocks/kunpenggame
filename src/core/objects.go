@@ -31,8 +31,8 @@ type PlaceHolder struct {
 type Team struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name,omitempty"`
-	Players    []int  `json:"players"`
-	Force      string `json:"force"`
+	Players    []int  `json:"players,omitempty"`
+	Force      string `json:"force,omitempty"`
 	Point      int    `json:"point"`
 	RemainLife int    `json:"remain_life"`
 }

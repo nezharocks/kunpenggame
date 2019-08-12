@@ -74,7 +74,8 @@ loop:
 
 // JSON is
 func (m *Map) JSON() string {
-	bytes, err := json.MarshalIndent(m, "", "    ")
+	// bytes, err := json.MarshalIndent(m, "", "    ")
+	bytes, err := json.Marshal(m)
 	if err != nil {
 		return err.Error()
 	}

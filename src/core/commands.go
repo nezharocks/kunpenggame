@@ -81,3 +81,20 @@ type PlayerAction struct {
 	Player int      `json:"player_id"`
 	Move   []string `json:"move"`
 }
+
+// ForceMode is
+type ForceMode string
+
+// BeatMode is beat mode
+const BeatMode = ForceMode("beat")
+
+// ThinkMode is think mode
+const ThinkMode = ForceMode("think")
+
+// Reverse is
+func (m ForceMode) Reverse() ForceMode {
+	if m == BeatMode {
+		return ThinkMode
+	}
+	return BeatMode
+}

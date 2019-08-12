@@ -29,13 +29,55 @@ func (g *GameImpl) NewPlayerID() int {
 }
 
 // Battle is
-func (g *GameImpl) Battle(team1 TeamAgent) {
-	log.Printf("the battle of AI vs. %v/%v is starting...", team1.GetTeamID(), team1.GetTeamName())
-	team2 := NewTeamImpl("ai_team")
-	team2.SetID(g.NewTeamID())
-	team2.GameStart()
+func (g *GameImpl) Battle(t1 TeamAgent) {
+	log.Printf("the battle of AI vs. %v/%v is starting...", t1.GetTeamID(), t1.GetTeamName())
+	t2 := NewTeamImpl("ai_team")
+	t2.SetID(g.NewTeamID())
+	t2.GameStart()
 
-	// legStart := &legStart{}
+	const (
+		vision    = 3
+		playerNum = 4
+		roundNum  = 300
+	)
+	m, err := NewMapFromString(map1)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	m.Vision = vision
+	tt1 := g.newLegTeam(t1.GetTeamID(), playerNum, Beat)
+	tt2 := g.newLegTeam(t2.GetID(), playerNum, Think)
+	legStart := &LegStart{
+		Map:   m,
+		Teams: []*Team{tt1, tt2},
+	}
+	err = t1.LegStart(legStart)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = t2.LegStart(legStart)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	switchRound := roundNum / 2
+	mode1 := BeatMode
+	// mode2 := mode1.Reverse()
+	for i := 0; i < roundNum; i++ {
+		if i == switchRound {
+			mode1 = mode1.Reverse()
+			// mode2 = mode1.Reverse()
+		}
+		r1 := &Round{
+			ID:   i,
+			Mode: string(mode1),
+		}
+		t1.Round(r1)
+	}
 
 	log.Println("Battle is ended")
 }
