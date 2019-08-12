@@ -7,19 +7,19 @@ import (
 
 // TeamService is
 type TeamService struct {
-	Team      TeamStrategy
-	GameAgent GameAgent
-	ErrCh     chan error
-	StopCh    chan struct{}
+	TeamBattle TeamBattle
+	GameAgent  GameAgent
+	ErrCh      chan error
+	StopCh     chan struct{}
 }
 
 // NewTeamService creates a TeamService instance
-func NewTeamService(team TeamStrategy, game GameAgent) *TeamService {
+func NewTeamService(tb TeamBattle, game GameAgent) *TeamService {
 	return &TeamService{
-		Team:      team,
-		GameAgent: game,
-		ErrCh:     make(chan error, 10),
-		StopCh:    make(chan struct{}, 10),
+		TeamBattle: tb,
+		GameAgent:  game,
+		ErrCh:      make(chan error, 10),
+		StopCh:     make(chan struct{}, 10),
 	}
 }
 
@@ -36,14 +36,14 @@ func (s *TeamService) Start() error {
 	s.waitInvitationFor(time.Second * 5)
 
 	// register the team
-	err = s.GameAgent.Registration(&Registration{s.Team.GetID(), s.Team.GetName()})
+	err = s.GameAgent.Registration(&Registration{s.TeamBattle.GetTeamID(), s.TeamBattle.GetTeamName()})
 	if err != nil {
 		log.Println(err) // todo
 		s.Stop()
 	}
 
 	// start a game battle
-	go s.Team.GameStart()
+	// go s.TeamBattle.GameStart()
 
 	// Wait and process the incoming messsages from game server
 	go s.handleExternalMessages()
@@ -54,7 +54,7 @@ func (s *TeamService) Start() error {
 
 // Stop is
 func (s *TeamService) Stop() {
-	err := s.Team.GameOver(&GameOver{})
+	err := s.TeamBattle.GameOver(&GameOver{})
 	if err != nil {
 		log.Println(err) // todo
 	}
@@ -105,7 +105,7 @@ func (s *TeamService) waitInvitationFor(d time.Duration) {
 	if NetworkMode {
 		select {
 		case inv := <-s.GameAgent.GetInvitationCh():
-			s.Team.SetID(inv.TeamID)
+			s.TeamBattle.SetTeamID(inv.TeamID)
 		case <-time.After(d):
 			log.Printf("team service - ignore waiting invitation for %v\n", d)
 		}
@@ -113,31 +113,32 @@ func (s *TeamService) waitInvitationFor(d time.Duration) {
 }
 
 func (s *TeamService) onLegStart(legStart *LegStart) {
-	if err := s.Team.LegStart(legStart); err != nil {
+	if err := s.TeamBattle.LegStart(legStart); err != nil {
 		s.ErrCh <- err
 	}
 }
 
 func (s *TeamService) onLegEnd(legEnd *LegEnd) {
-	if err := s.Team.LegEnd(legEnd); err != nil {
+	if err := s.TeamBattle.LegEnd(legEnd); err != nil {
 		s.ErrCh <- err
 	}
 }
 
 func (s *TeamService) onRound(round *Round) {
-	action, err := s.Team.Round(round)
+	err := s.TeamBattle.Round(round)
 	if err != nil {
 		s.ErrCh <- err
 		return
 	}
-	err = s.GameAgent.Action(action)
+	action := <-s.TeamBattle.GetActionCh()
+	err = s.GameAgent.Action(&action)
 	if err != nil {
 		s.ErrCh <- err
 	}
 }
 
 func (s *TeamService) onGameOver(gameOver *GameOver) {
-	if err := s.Team.GameOver(gameOver); err != nil {
+	if err := s.TeamBattle.GameOver(gameOver); err != nil {
 		s.ErrCh <- err
 	}
 }

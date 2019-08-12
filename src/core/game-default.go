@@ -32,8 +32,7 @@ func (g *GameImpl) NewPlayerID() int {
 func (g *GameImpl) Battle(t1 TeamAgent) {
 	log.Printf("the battle of AI vs. %v/%v is starting...", t1.GetTeamID(), t1.GetTeamName())
 	t2 := NewTeamImpl("ai_team")
-	t2.SetID(g.NewTeamID())
-	t2.GameStart()
+	t2.SetTeamID(g.NewTeamID())
 
 	const (
 		vision    = 3
@@ -47,7 +46,7 @@ func (g *GameImpl) Battle(t1 TeamAgent) {
 	}
 	m.Vision = vision
 	tt1 := g.newLegTeam(t1.GetTeamID(), playerNum, Beat)
-	tt2 := g.newLegTeam(t2.GetID(), playerNum, Think)
+	tt2 := g.newLegTeam(t2.GetTeamID(), playerNum, Think)
 	legStart := &LegStart{
 		Map:   m,
 		Teams: []*Team{tt1, tt2},

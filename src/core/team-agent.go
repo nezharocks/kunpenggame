@@ -73,6 +73,14 @@ func (a *TeamAgentImpl) GetTeamName() string {
 	return a.Name
 }
 
+// SetTeamID is
+func (a *TeamAgentImpl) SetTeamID(id int) {
+}
+
+// SetTeamName is
+func (a *TeamAgentImpl) SetTeamName(name string) {
+}
+
 // GetRegCh is
 func (a *TeamAgentImpl) GetRegCh() chan Registration {
 	return a.RegCh
