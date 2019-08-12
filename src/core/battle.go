@@ -8,7 +8,10 @@ import (
 )
 
 const (
-	Beat  = "beat"
+	//Beat means eat mode
+	Beat = "beat"
+
+	//Think means run mode
 	Think = "think"
 )
 
