@@ -45,7 +45,7 @@ func (t *TeamImpl) GameStart() {
 
 // LegStart is
 func (t *TeamImpl) LegStart(legStart *LegStart) error {
-	t.Battle.NewLeg(legStart)
+	t.Battle.StartLeg(legStart)
 	return nil
 }
 
@@ -56,8 +56,12 @@ func (t *TeamImpl) LegEnd(legEnd *LegEnd) error {
 
 // Round is
 func (t *TeamImpl) Round(round *Round) (*Action, error) {
-	// todo
-	return &Action{}, nil
+	err := t.Battle.AddRound(round)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.Battle.CalcAction()
 }
 
 // GameOver is

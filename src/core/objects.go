@@ -29,12 +29,13 @@ type Wormhole struct {
 
 // Map is
 type Map struct {
-	Width    int         `json:"width"`
-	Height   int         `json:"height"`
-	Vision   int         `json:"vision"`
-	Meteor   []*Meteor   `json:"meteor"`
-	Tunnel   []*Tunnel   `json:"tunnel"`
-	Wormhole []*Wormhole `json:"wormhole"`
+	Width     int         `json:"width"`
+	Height    int         `json:"height"`
+	Vision    int         `json:"vision"`
+	Meteors   []*Meteor   `json:"meteor"`
+	Tunnels   []*Tunnel   `json:"tunnel"`
+	Wormholes []*Wormhole `json:"wormhole"`
+	Powers    []*Power    `json:"-"`
 }
 
 // Team is ,omitempty

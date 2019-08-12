@@ -83,7 +83,7 @@ func battleWithStartedLeg(teamID int, battleTime time.Time) *Battle {
 		Map:   mapExample(),
 		Teams: teamsStartLegExample(),
 	}
-	battle.NewLeg(legStart)
+	battle.StartLeg(legStart)
 	return battle
 }
 
@@ -140,7 +140,7 @@ func TestNewBattle(t *testing.T) {
 	}
 }
 
-func TestBattle_NewLeg(t *testing.T) {
+func TestBattle_StartLeg(t *testing.T) {
 	battleTime := time.Now()
 	sortedTeams := teamsLegExample()
 	type fields struct {
@@ -160,7 +160,7 @@ func TestBattle_NewLeg(t *testing.T) {
 		want   *Leg
 	}{
 		{
-			name: "NewLeg - ok",
+			name: "StartLeg - ok",
 			fields: fields{
 				TeamID: 100,
 				Time:   battleTime,
@@ -198,11 +198,11 @@ func TestBattle_NewLeg(t *testing.T) {
 				Legs:    tt.fields.Legs,
 				Current: tt.fields.Current,
 			}
-			got := b.NewLeg(tt.args.legStart)
+			got := b.StartLeg(tt.args.legStart)
 			// fmt.Printf("%v\n", got.JSON())
 			// fmt.Printf("%v\n", tt.want.JSON())
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Battle.NewLeg() = %v, want %v", got, tt.want)
+				t.Errorf("Battle.StartLeg() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -3,7 +3,13 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
+)
+
+const (
+	Beat  = "beat"
+	Think = "think"
 )
 
 // Battle is
@@ -35,19 +41,19 @@ type Leg struct {
 }
 
 // JSON is
-func (b *Leg) JSON() string {
-	bytes, _ := json.Marshal(b)
+func (l *Leg) JSON() string {
+	bytes, _ := json.Marshal(l)
 	return string(bytes)
 }
 
 // LegRound is
 type LegRound struct {
-	Round  Round
-	Action Action
+	Round  *Round
+	Action *Action
 }
 
-// NewLeg is
-func (b *Battle) NewLeg(legStart *LegStart) *Leg {
+// StartLeg is
+func (b *Battle) StartLeg(legStart *LegStart) *Leg {
 	leg := &Leg{
 		Index:   len(b.Legs),
 		Map:     legStart.Map,
@@ -111,4 +117,75 @@ func (b *Battle) EndLeg(legEnd *LegEnd) error {
 		t2.Point = t1.Point
 	}
 	return nil
+}
+
+// AddRound is
+func (b *Battle) AddRound(round *Round) error {
+	if b.Current == nil {
+		return fmt.Errorf("battle state illegal - the battle has no any started legs")
+	}
+	leg := b.Current
+	legRound := &LegRound{Round: round}
+	leg.Rounds = append(leg.Rounds, legRound)
+	leg.Current = legRound
+
+	// update points and remain lives each team
+	for _, t1 := range round.Teams {
+		t2, ok := leg.TeamMap[t1.ID]
+		if !ok {
+			continue
+		}
+		t2.Point = t1.Point
+		t2.RemainLife = t1.RemainLife
+	}
+
+	// update players'score, sleep and location in current view
+	for _, p1 := range round.Players {
+		p2, ok := leg.Players[p1.ID]
+		if !ok {
+			continue
+		}
+		p2.Score = p1.Score
+		p2.Sleep = p1.Sleep
+		p2.X = p1.X
+		p2.Y = p1.Y
+	}
+	return nil
+}
+
+// CalcAction is
+// 0.1 - first version which can work
+func (b *Battle) CalcAction() (*Action, error) {
+	leg := b.Current
+	round := leg.Current.Round
+	width := leg.Map.Width
+	height := leg.Map.Height
+	vision := leg.Map.Vision
+	powerCount := len(round.Powers)
+	log.Printf("width: %v, height: %v, vision: %v, powerCount: %v", width, height, vision, powerCount)
+	action := &Action{
+		ID: round.ID,
+	}
+	myPlayers := make([]*Player, 0, 4)
+	for _, p := range round.Players {
+		if p.Team == b.TeamID && p.Score == 0 {
+			myPlayers = append(myPlayers, p)
+		}
+	}
+	l := len(myPlayers)
+	action.Actions = make([]*PlayerAction, l, l)
+	for i, p := range myPlayers {
+		action.Actions[i] = &PlayerAction{
+			Team:   p.Team,
+			Player: p.ID,
+			Move:   []string{},
+		}
+	}
+
+	return action, nil
+}
+
+func (b *Battle) test() (*Action, error) {
+
+	return nil, nil
 }
