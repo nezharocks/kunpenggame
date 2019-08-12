@@ -34,6 +34,14 @@ loop:
 		case '…':
 			x = x + 2
 		case '\n':
+			if m.Width == 0 {
+				m.Width = x
+			} else {
+				if m.Width != x {
+					return nil, fmt.Errorf("the %dth row has different width (%v) from other width (%v)", y, x, m.Width)
+				}
+			}
+
 			x = 0
 			y++
 			continue loop
@@ -55,6 +63,12 @@ loop:
 		}
 		x++
 	}
+	m.Height = y + 1
+
+	if m.Width != m.Height {
+		return nil, fmt.Errorf("map's width %v and height %v are different", m.Width, m.Height)
+	}
+
 	return m, nil
 }
 
