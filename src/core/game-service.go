@@ -8,15 +8,15 @@ import (
 
 // GameService is
 type GameService struct {
-	Game     GameStrategy
-	Listener net.Listener
+	GameBattle GameBattle
+	Listener   net.Listener
 }
 
 // NewGameService creates a GameService instance
-func NewGameService(game GameStrategy, ln net.Listener) *GameService {
+func NewGameService(gb GameBattle, ln net.Listener) *GameService {
 	return &GameService{
-		Game:     game,
-		Listener: ln,
+		GameBattle: gb,
+		Listener:   ln,
 	}
 }
 
@@ -35,7 +35,7 @@ func (s *GameService) Serve() {
 			teamAgent := NewTeamAgentImpl(wire)
 
 			if NetworkMode {
-				inv := &Invitation{s.Game.NewTeamID()}
+				inv := &Invitation{s.GameBattle.NewTeamID()}
 				err := teamAgent.Invitation(inv)
 				if err != nil {
 					log.Println(err)
@@ -59,7 +59,7 @@ func (s *GameService) Serve() {
 				teamAgent.Disconnect()
 				return
 			}
-			s.Game.Battle(teamAgent)
+			s.GameBattle.Battle(teamAgent)
 		}()
 	}
 }
