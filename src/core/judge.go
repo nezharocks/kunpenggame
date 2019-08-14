@@ -23,7 +23,11 @@ type JudgeBattle struct {
 	TeamID2      int
 	TeamsPlayers [][]int
 	Map          *Map
+	CurrentLeg   int
+	CurrentRound int
 }
+
+var legModeSequences = []ForceMode{BeatMode, ThinkMode}
 
 // NewTeamID is
 func (j *Judge) NewTeamID() int {
@@ -45,7 +49,9 @@ func (j *Judge) NewBattle(teamID1, teamID2 int) *JudgeBattle {
 // Init is
 func (b *JudgeBattle) init() {
 	b.TeamsPlayers = generateTeamPlayers(b.Judge.PlayerNum)
-	b.Map = b.generateMap()
+	b.initMap()
+	b.initPlayerLocations()
+
 }
 
 // func (b *JudgeBattle) newLegTeam(teamID, n int, force string) *Team {
@@ -61,14 +67,19 @@ func (b *JudgeBattle) init() {
 // 	return team
 // }
 
-func (b *JudgeBattle) generateMap() *Map {
+func (b *JudgeBattle) initMap() {
 	m, err := NewMapFromString(b.Judge.MapData)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return
 	}
 	m.Vision = b.Judge.Vision
-	return m
+	b.Map = m
+}
+
+func (b *JudgeBattle) initPlayerLocations() {
+	mode := legModeSequences[b.CurrentLeg]
+
 }
 
 func generateTeamPlayers(n int) [][]int {

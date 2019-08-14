@@ -15,16 +15,18 @@ type Meteor struct {
 
 // Wormhole is
 type Wormhole struct {
-	Name string `json:"name"`
-	X    int    `json:"x"`
-	Y    int    `json:"y"`
+	Name string    `json:"name"`
+	X    int       `json:"x"`
+	Y    int       `json:"y"`
+	Exit *Wormhole `json:"-"`
 }
 
 // PlaceHolder is
 type PlaceHolder struct {
-	Name string `json:"name"`
-	X    int    `json:"x"`
-	Y    int    `json:"y"`
+	Name   string  `json:"name"`
+	X      int     `json:"x"`
+	Y      int     `json:"y"`
+	Player *Player `json:"-"`
 }
 
 // Team is

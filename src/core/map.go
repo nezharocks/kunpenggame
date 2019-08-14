@@ -15,6 +15,7 @@ type Map struct {
 	Wormholes    []*Wormhole    `json:"wormhole"`
 	Powers       []*Power       `json:"power"`
 	PlaceHolders []*PlaceHolder `json:"holder"`
+	Mat          [][]*Tile      `json:"-"`
 }
 
 // NewMapFromString is
@@ -80,4 +81,40 @@ func (m *Map) JSON() string {
 		return err.Error()
 	}
 	return string(bytes)
+}
+
+// Matrix is
+func (m *Map) Matrix() [][]*Tile {
+	m.Mat = make([][]*Tile, m.Width, m.Width)
+	for i := 0; i < m.Width; i++ {
+		m.Mat[i] = make([]*Tile, m.Height, m.Height)
+	}
+
+	// init wormholes
+	for _, wormhole := range m.Wormholes {
+		m.Mat[wormhole.X][wormhole.Y] = NewTileWormhole(wormhole)
+	}
+
+	// init meteors
+	for _, meteor := range m.Meteors {
+		m.Mat[meteor.X][meteor.Y] = NewTileMeteor()
+	}
+
+	// init tunnels
+	for _, tunnel := range m.Tunnels {
+		m.Mat[tunnel.X][tunnel.Y] = NewTileTunnel(tunnel)
+	}
+
+	// init blank holders left
+	for i := 0; i < m.Width; i++ {
+	rows:
+		for j := 0; j < m.Height; j++ {
+			if m.Mat[i][j] != nil {
+				continue rows
+			}
+			m.Mat[i][j] = NewTileHolder()
+		}
+	}
+
+	return m.Mat
 }

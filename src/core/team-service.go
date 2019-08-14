@@ -42,9 +42,6 @@ func (s *TeamService) Start() error {
 		s.Stop()
 	}
 
-	// start a game battle
-	// go s.TeamBattle.GameStart()
-
 	// Wait and process the incoming messsages from game server
 	go s.handleExternalMessages()
 
@@ -83,13 +80,13 @@ loop:
 	for {
 		select {
 		case legStart := <-s.GameAgent.GetLegStartCh():
-			go s.onLegStart(&legStart)
+			s.onLegStart(&legStart)
 		case legEnd := <-s.GameAgent.GetLegEndCh():
-			go s.onLegEnd(&legEnd)
+			s.onLegEnd(&legEnd)
 		case round := <-s.GameAgent.GetRoundCh():
-			go s.onRound(&round)
+			s.onRound(&round)
 		case gameOver := <-s.GameAgent.GetGameOverCh():
-			go s.onGameOver(&gameOver)
+			s.onGameOver(&gameOver)
 		case err := <-s.GameAgent.GetErrorCh():
 			s.ErrCh <- err
 		case <-time.After(time.Second * 10): // server timeout

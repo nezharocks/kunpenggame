@@ -1,6 +1,10 @@
 package core
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"time"
+)
 
 // GameImpl is
 type GameImpl struct {
@@ -66,6 +70,7 @@ func (g *GameImpl) Battle(t1 TeamAgent) {
 	switchRound := roundNum / 2
 	mode1 := BeatMode
 	// mode2 := mode1.Reverse()
+loop:
 	for i := 0; i < roundNum; i++ {
 		if i == switchRound {
 			mode1 = mode1.Reverse()
@@ -76,6 +81,13 @@ func (g *GameImpl) Battle(t1 TeamAgent) {
 			Mode: string(mode1),
 		}
 		t1.Round(r1)
+		select {
+		case action1 := <-t1.GetActionCh():
+			fmt.Println(action1)
+		case <-time.After(time.Millisecond * 800):
+			break loop
+		}
+
 	}
 
 	log.Println("Battle is ended")
