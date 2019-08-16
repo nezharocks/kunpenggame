@@ -48,7 +48,6 @@ func (t *TeamImpl) SetTeamName(name string) {
 
 func (t *TeamImpl) ensureBattle() {
 	if t.Battle == nil {
-		fmt.Println("==========\n============\n============\n============")
 		t.Battle = NewBattle(t.ID, time.Now())
 		// todo init the game battle's algorithm impl here.
 		log.Printf("team %q's game battle is started", fmt.Sprintf("%v:%v", t.ID, t.Name))

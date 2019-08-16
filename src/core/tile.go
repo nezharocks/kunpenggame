@@ -92,9 +92,30 @@ func NewTileTunnel(tunnel *Tunnel) *Tile {
 // BecomeHolder is
 func (t *Tile) BecomeHolder() {
 	if t.Type != TilePower {
-		log.Println("cannot become from %v to to %v", t.Type.String(), TileHolder.String())
+		log.Printf("cannot become from %v to to %v", t.Type.String(), TileHolder.String())
 		return
 	}
 	t.Type = TileHolder
 	t.Point = 0
+}
+
+// AddPlayer is
+func (t *Tile) AddPlayer(player *Player) {
+	// todo
+	if t.HasPlayer {
+		if t.Multiple {
+			t.Players = append(t.Players, player)
+		} else {
+			if t.Players == nil {
+				t.Players = make([]*Player, 0)
+			}
+			t.Players = append(t.Players, t.Player, player)
+			t.Player = nil
+			t.Multiple = true
+		}
+	} else {
+		t.Player = player
+		t.HasPlayer = true
+	}
+	t.Point = t.Point + player.Point
 }

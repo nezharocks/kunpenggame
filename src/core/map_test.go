@@ -16,23 +16,23 @@ func TestNewMapFromStrTing(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "TestNewMapFromString - map1",
+			name: "TestNewMapFromString - Map1",
 			args: args{
-				data: map1,
+				data: Map1,
 			},
 			wantErr: false,
 		},
 		{
-			name: "TestNewMapFromString - map2",
+			name: "TestNewMapFromString - Map2",
 			args: args{
-				data: map2,
+				data: Map2,
 			},
 			wantErr: false,
 		},
 		{
-			name: "TestNewMapFromString - map3",
+			name: "TestNewMapFromString - Map3",
 			args: args{
-				data: map3,
+				data: Map3,
 			},
 			wantErr: false,
 		},

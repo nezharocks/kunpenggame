@@ -14,12 +14,12 @@ func mockJudge() *Judge {
 		RoundNum:  300,
 		PlayerNum: 4,
 		FirstMode: BeatMode,
-		MapData:   map1,
+		MapData:   Map1,
 	}
 }
 
 func mockMap() *Map {
-	m, _ := NewMapFromString(map1)
+	m, _ := NewMapFromString(Map1)
 	m.Vision = 4
 	return m
 }
@@ -34,7 +34,7 @@ func TestJudge_NewBattle(t *testing.T) {
 		LegNum    int
 		RoundNum  int
 		PlayerNum int
-		FirstMode ForceMode
+		FirstMode Force
 		MapData   string
 	}
 	type args struct {

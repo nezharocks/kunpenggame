@@ -82,19 +82,22 @@ type PlayerAction struct {
 	Move   []string `json:"move"`
 }
 
-// ForceMode is
-type ForceMode string
+// LegStartTeam is
+type LegStartTeam struct {
+	ID      int    `json:"id"`
+	Players []int  `json:"players"`
+	Force   string `json:"force"`
+}
 
-// BeatMode is beat mode
-const BeatMode = ForceMode("beat")
+// LegEndTeam is
+type LegEndTeam struct {
+	ID    int `json:"id"`
+	Point int `json:"point"`
+}
 
-// ThinkMode is think mode
-const ThinkMode = ForceMode("think")
-
-// Reverse is
-func (m ForceMode) Reverse() ForceMode {
-	if m == BeatMode {
-		return ThinkMode
-	}
-	return BeatMode
+// RoundTeam is
+type RoundTeam struct {
+	ID         int `json:"id"`
+	Point      int `json:"point"`
+	RemainLife int `json:"remain_life"`
 }

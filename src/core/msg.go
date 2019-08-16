@@ -95,92 +95,13 @@ func (m *Message) BytesOnWire() ([]byte, error) {
 
 // String returns the JSON string of the messsage.
 func (m *Message) String() string {
-	jsonBytes, err := json.Marshal(m)
+	jsonBytes, err := json.MarshalIndent(m, "", "  ")
+	// jsonBytes, err := json.Marshal(m)
 	if err != nil {
 		return fmt.Sprintf("message error - fail to marshal message to bytes, error: %v", err)
 	}
 	return string(jsonBytes)
 }
-
-// Equal equals
-// func (m *Message) Equal(n *Message) bool {
-// 	if m == nil || n == nil {
-// 		return false
-// 	}
-// 	if m.Name != n.Name {
-// 		return false
-// 	}
-// 	v1 := reflect.ValueOf(m.Payload)
-// 	v2 := reflect.ValueOf(n.Payload)
-// 	if v1.Type() != v2.Type() {
-// 		return false
-// 	}
-
-// 	switch m.Name {
-// 	case RegistrationName:
-// 		a, err := m.Registration()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.Registration()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	case LegStartName:
-// 		a, err := m.LegStart()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.LegStart()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	case LegEndName:
-// 		a, err := m.LegEnd()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.LegEnd()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	case RoundName:
-// 		a, err := m.Round()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.Round()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	case ActionName:
-// 		a, err := m.Action()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.Action()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	case GameOverName:
-// 		a, err := m.GameOver()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		b, err := n.GameOver()
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return reflect.DeepEqual(a, b)
-// 	default:
-// 		return false
-// 	}
-// }
 
 func (m *Message) unmarshalPayload(obj interface{}) error {
 	rawMsg := m.Payload.(*json.RawMessage)

@@ -1,6 +1,9 @@
 package core
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 // TeamAgentImpl is
 type TeamAgentImpl struct {
@@ -96,29 +99,36 @@ func (a *TeamAgentImpl) GetErrCh() chan error {
 	return a.ErrCh
 }
 
+func wrapCommandError(cmd string, err error) error {
+	if err != nil {
+		return fmt.Errorf("%v error: %v", cmd, err)
+	}
+	return nil
+}
+
 // Invitation sends the Invitation message to the team
 func (a *TeamAgentImpl) Invitation(invitation *Invitation) error {
-	return a.Wire.Send(invitation.Message())
+	return wrapCommandError("invitation", a.Wire.Send(invitation.Message()))
 }
 
 // LegStart sends the LegStart message to the team
 func (a *TeamAgentImpl) LegStart(legStart *LegStart) error {
-	return a.Wire.Send(legStart.Message())
+	return wrapCommandError("leg start", a.Wire.Send(legStart.Message()))
 }
 
 // LegEnd sends the LegEnd message to the team
 func (a *TeamAgentImpl) LegEnd(legEnd *LegEnd) error {
-	return a.Wire.Send(legEnd.Message())
+	return wrapCommandError("leg end", a.Wire.Send(legEnd.Message()))
 }
 
 // Round sends the Round message to the team
 func (a *TeamAgentImpl) Round(round *Round) error {
-	return a.Wire.Send(round.Message())
+	return wrapCommandError("round", a.Wire.Send(round.Message()))
 }
 
 // GameOver sends the GameOver message to the team
 func (a *TeamAgentImpl) GameOver(gameOver *GameOver) error {
-	return a.Wire.Send(gameOver.Message())
+	return wrapCommandError("game over", a.Wire.Send(gameOver.Message()))
 }
 
 // Disconnect is

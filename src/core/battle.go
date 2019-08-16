@@ -142,13 +142,13 @@ func (b *Battle) AddRound(round *Round) error {
 		t2.RemainLife = t1.RemainLife
 	}
 
-	// update players'score, sleep and location in current view
+	// update players' points, sleep and location in current view
 	for _, p1 := range round.Players {
 		p2, ok := leg.Players[p1.ID]
 		if !ok {
 			continue
 		}
-		p2.Score = p1.Score
+		p2.Point = p1.Point
 		p2.Sleep = p1.Sleep
 		p2.X = p1.X
 		p2.Y = p1.Y
@@ -171,7 +171,7 @@ func (b *Battle) CalcAction() (*Action, error) {
 	}
 	myPlayers := make([]*Player, 0, 4)
 	for _, p := range round.Players {
-		if p.Team == b.TeamID && p.Score == 0 {
+		if p.Team == b.TeamID && p.Point == 0 {
 			myPlayers = append(myPlayers, p)
 		}
 	}
