@@ -338,7 +338,7 @@ loop_rounds:
 				break loop_rounds
 			}
 		case <-time.After(time.Millisecond * ActionTimeout):
-			log.Println("team %v timeout at the %vth round of the %vth leg", escapee.GetTeamID(), i, l.Index)
+			log.Printf("team %v timeout at the %vth round of the %vth leg\n", escapee.GetTeamID(), i, l.Index)
 		}
 
 		// hunter action
@@ -360,7 +360,7 @@ loop_rounds:
 				break loop_rounds
 			}
 		case <-time.After(time.Millisecond * ActionTimeout):
-			log.Println("team %v timeout at the %vth round of the %vth leg", hunter.GetTeamID(), i, l.Index)
+			log.Printf("team %v timeout at the %vth round of the %vth leg\n", hunter.GetTeamID(), i, l.Index)
 		}
 	}
 
