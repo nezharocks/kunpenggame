@@ -18,7 +18,7 @@ const (
 	DefaultLegModeNum = 2
 
 	// DefaultRoundNum is
-	DefaultRoundNum = 300
+	DefaultRoundNum = 4
 
 	// DefaultPlayerNum is
 	DefaultPlayerNum = 4
@@ -37,6 +37,12 @@ var DefaultTeamForces = [TeamNum]TeamForce{BeatForce, ThinkForce}
 var DefaultBattleModes = [DefaultLegNum][DefaultLegModeNum]BattleMode{
 	{FireMode, WaterMode},
 	{WaterMode, FireMode},
+}
+
+// TeamPlaceHolderIndices holds the index matrix of place holders per team per leg
+var TeamPlaceHolderIndices = [DefaultLegNum][TeamNum]int{
+	{0, 1},
+	{1, 0},
 }
 
 // Judge is
@@ -191,11 +197,11 @@ func (b *JudgeBattle) newLeg(index int) *JudgeBattleLeg {
 	}
 
 	// init teams
-	for t := 0; t < TeamNum; t++ {
-		force := b.Judge.TeamForces[t]
-		leg.Teams[t] = &Team{
-			ID:         b.TeamBattles[t].GetTeamID(),
-			Players:    b.TeamsPlayers[t],
+	for i := 0; i < TeamNum; i++ {
+		force := b.Judge.TeamForces[i]
+		leg.Teams[i] = &Team{
+			ID:         b.TeamBattles[i].GetTeamID(),
+			Players:    b.TeamsPlayers[i],
 			Force:      force.String(),
 			RemainLife: b.Judge.PlayerLives - b.Judge.PlayerNum,
 		}
@@ -205,24 +211,19 @@ func (b *JudgeBattle) newLeg(index int) *JudgeBattleLeg {
 	orders := b.Judge.PlayerOrders
 	playerNum := b.Judge.PlayerNum
 	for t := 0; t < TeamNum; t++ {
-		playerIDs := b.TeamsPlayers[t]
-		if b.Map == nil {
-			log.Println("battle map is nil")
-		} else {
-			if b.Map.TeamPlaceHolders == nil {
-				log.Println("battle map TeamPlaceHolders is nil")
-			}
-		}
-		holders := b.Map.TeamPlaceHolders[t]
+		phIndex := TeamPlaceHolderIndices[index][t]
+		holders := b.Map.TeamPlaceHolders[phIndex]
 		holderNum := len(holders)
 		leg.TeamsPlayers[t] = make([]*Player, playerNum, playerNum)
 		for i := 0; i < playerNum; i++ {
 			playerIndex := orders[i]
 			holder := holders[playerIndex%holderNum]
-			leg.TeamsPlayers[t][playerIndex] = b.newPlayer(b.TeamBattles[t].GetTeamID(), playerIDs[playerIndex], holder)
+			teamID := b.TeamBattles[t].GetTeamID()
+			playerID := b.TeamsPlayers[t][playerIndex]
+			leg.TeamsPlayers[t][playerIndex] = b.newPlayer(teamID, playerID, holder)
 		}
 	}
-	leg.Table = NewTable(b.Map, leg.Teams[:], leg.TeamsPlayers[:])
+	leg.Table = NewTable(b.Map, leg.Teams, leg.TeamsPlayers)
 	return leg
 }
 
@@ -251,7 +252,6 @@ type JudgeBattleLeg struct {
 	Teams        [TeamNum]*Team
 	TeamsPlayers [TeamNum][]*Player
 	Table        *Table `json:"-"`
-	RoundNum     int
 }
 
 // JSON is
@@ -300,7 +300,7 @@ func (l *JudgeBattleLeg) Run() {
 		Map:   l.Battle.Map,
 		Teams: l.Teams[:], // todo
 	}
-	log.Printf("%+v\n", legStart.Message())
+	// log.Printf("%+v\n", legStart.Message())
 	err = escapee.LegStart(legStart)
 	if err != nil {
 		log.Println(err)
@@ -321,7 +321,9 @@ loop_rounds:
 		}
 		// escapee action
 		round = l.Round(i, escapee.GetTeamID(), powerForce)
-		log.Printf("%+v\n", round.Message())
+		if debugRound {
+			log.Printf("%+v\n", round.Message())
+		}
 		err = escapee.Round(round)
 		if err != nil {
 			log.Println(err)
@@ -329,7 +331,9 @@ loop_rounds:
 
 		select {
 		case action := <-escapee.GetActionCh():
-			log.Printf("%+v\n", action.Message())
+			if debugRound {
+				log.Printf("%+v\n", action.Message())
+			}
 			if l.Action(&action) {
 				break loop_rounds
 			}
@@ -339,7 +343,9 @@ loop_rounds:
 
 		// hunter action
 		round = l.Round(i, hunter.GetTeamID(), powerForce)
-		log.Printf("%+v\n", round.Message())
+		if debugRound {
+			log.Printf("%+v\n", round.Message())
+		}
 		err = hunter.Round(round)
 		if err != nil {
 			log.Println(err)
@@ -347,7 +353,9 @@ loop_rounds:
 
 		select {
 		case action := <-hunter.GetActionCh():
-			log.Printf("%+v\n", action.Message())
+			if debugRound {
+				log.Printf("%+v\n", action.Message())
+			}
 			if l.Action(&action) {
 				break loop_rounds
 			}

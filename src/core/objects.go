@@ -23,7 +23,6 @@ type Wormhole struct {
 
 // PlaceHolder is
 type PlaceHolder struct {
-	// Name   string  `json:"name"`
 	X      int     `json:"x"`
 	Y      int     `json:"y"`
 	Player *Player `json:"-"`

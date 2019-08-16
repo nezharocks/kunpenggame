@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -161,11 +160,6 @@ func (b *Battle) AddRound(round *Round) error {
 func (b *Battle) CalcAction() (*Action, error) {
 	leg := b.Current
 	round := leg.Current.Round
-	width := leg.Map.Width
-	height := leg.Map.Height
-	vision := leg.Map.Vision
-	powerCount := len(round.Powers)
-	log.Printf("width: %v, height: %v, vision: %v, powerCount: %v", width, height, vision, powerCount)
 	action := &Action{
 		ID: round.ID,
 	}

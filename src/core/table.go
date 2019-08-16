@@ -4,12 +4,12 @@ package core
 type Table struct {
 	Tiles        [][]*Tile
 	Map          *Map
-	Teams        []*Team
-	TeamsPlayers [][]*Player
+	Teams        [TeamNum]*Team
+	TeamsPlayers [TeamNum][]*Player
 }
 
 // NewTable is
-func NewTable(m *Map, teams []*Team, teamsPlayers [][]*Player) *Table {
+func NewTable(m *Map, teams [TeamNum]*Team, teamsPlayers [TeamNum][]*Player) *Table {
 	tiles := make([][]*Tile, m.Width, m.Width)
 	for i := 0; i < m.Width; i++ {
 		tiles[i] = make([]*Tile, m.Height, m.Height)

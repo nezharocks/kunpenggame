@@ -43,8 +43,9 @@ func (w *Wire) Send(msg *Message) error {
 		return fmt.Errorf("wire error - fail to write message to wire, error: %v", err)
 	}
 
-	log.Printf("message sent ->\n%v", string(wireBytes))
-
+	if debugMessage {
+		log.Printf("message sent ->\n%v", string(wireBytes))
+	}
 	return nil
 }
 
@@ -58,7 +59,9 @@ func (w *Wire) Receive() {
 			w.ErrCh <- err
 			continue
 		}
-		log.Printf("message received ->\n%v", string(scanner.Bytes()))
+		if debugMessage {
+			log.Printf("message received ->\n%v", string(scanner.Bytes()))
+		}
 		w.MsgCh <- *msg
 	}
 }

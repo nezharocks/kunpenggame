@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	name = *flag.String("name", "2019 华为云鲲鹏开发者大赛 - 倒垃圾战队训练服务器", "set game server name")
+	name = *flag.String("name", "吕红利", "set game server name")
 	port = *flag.Int("port", 2019, "set game server port")
 )
 
