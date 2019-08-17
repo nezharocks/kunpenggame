@@ -18,7 +18,7 @@ const (
 	DefaultLegModeNum = 2
 
 	// DefaultRoundNum is
-	DefaultRoundNum = 4
+	DefaultRoundNum = 2
 
 	// DefaultPlayerNum is
 	DefaultPlayerNum = 4
@@ -155,6 +155,10 @@ func (b *JudgeBattle) Run() {
 // Init is
 func (b *JudgeBattle) init() {
 	b.Map = b.Judge.Map
+	// player := b.Map.TeamPlaceHolders[1][0]
+	// player.X = 1
+	// player.Y = 8
+
 	b.initTeams()
 	b.initTeamPlayers()
 	b.initLegs()
@@ -223,7 +227,16 @@ func (b *JudgeBattle) newLeg(index int) *JudgeBattleLeg {
 			leg.TeamsPlayers[t][playerIndex] = b.newPlayer(teamID, playerID, holder)
 		}
 	}
-	leg.Table = NewTable(b.Map, leg.Teams, leg.TeamsPlayers)
+
+	leg.TeamMap = make(map[TeamBattle]*Team, TeamNum)
+	leg.PlayersMap = make(map[TeamBattle][]*Player, b.Judge.PlayerNum)
+	for t := 0; t < TeamNum; t++ {
+		tb := b.TeamBattles[t]
+		leg.TeamMap[tb] = leg.Teams[t]
+		leg.PlayersMap[tb] = leg.TeamsPlayers[t]
+	}
+
+	leg.Table = NewTable(b.Map, b.TeamBattles, leg.TeamMap, leg.PlayersMap)
 	return leg
 }
 
@@ -251,6 +264,8 @@ type JudgeBattleLeg struct {
 	Index        int
 	Teams        [TeamNum]*Team
 	TeamsPlayers [TeamNum][]*Player
+	TeamMap      map[TeamBattle]*Team
+	PlayersMap   map[TeamBattle][]*Player
 	Table        *Table `json:"-"`
 }
 
@@ -300,7 +315,7 @@ func (l *JudgeBattleLeg) Run() {
 		Map:   l.Battle.Map,
 		Teams: l.Teams[:], // todo
 	}
-	// log.Printf("%+v\n", legStart.Message())
+	log.Printf("%+v\n", legStart.Message())
 	err = escapee.LegStart(legStart)
 	if err != nil {
 		log.Println(err)
@@ -320,7 +335,7 @@ loop_rounds:
 			escapee, hunter = l.getTeamBattles(powerForce)
 		}
 		// escapee action
-		round = l.Round(i, escapee.GetTeamID(), powerForce)
+		round = l.Round(i, escapee, powerForce)
 		if debugRound {
 			log.Printf("%+v\n", round.Message())
 		}
@@ -342,7 +357,7 @@ loop_rounds:
 		}
 
 		// hunter action
-		round = l.Round(i, hunter.GetTeamID(), powerForce)
+		round = l.Round(i, hunter, powerForce)
 		if debugRound {
 			log.Printf("%+v\n", round.Message())
 		}
@@ -379,24 +394,40 @@ loop_rounds:
 }
 
 // Round is
-func (l *JudgeBattleLeg) Round(index, teamID int, powerForce TeamForce) *Round {
-	r := &Round{}
+func (l *JudgeBattleLeg) Round(index int, tb TeamBattle, powerForce TeamForce) *Round {
+	r := &Round{
+		ID:   index,
+		Mode: powerForce.String(),
+	}
+	// calculate teams
+	var roundTeams [TeamNum]*Team
+	for i, t := range l.Teams {
+		nt := *t
+		nt.Players = nil
+		nt.Force = ""
+		roundTeams[i] = &nt
+	}
+	r.Teams = roundTeams[:]
+
+	// calculate the visions of the active players
+	activePlayers := l.Table.TeamActivePlayers(tb)
+	visions := make([]*Vision, 0, l.Battle.Judge.PlayerNum)
+	for _, p := range activePlayers {
+		v := l.Battle.Map.GetVision(p.X, p.Y)
+		visions = append(visions, v)
+		// fmt.Printf("%v\n", *v)
+	}
+
+	// calculate powers and players (including rival's and mime) in the visions
+	r.Powers = l.Table.GetVisiblePowers(visions)
+	currentPlayers := l.Table.TeamAlivePlayers(tb)
+	rival := l.Table.GetRival(tb)
+	rivalPlayers := l.Table.GetVisiblePlayers(l.PlayersMap[rival], visions)
+	r.Players = append(currentPlayers, rivalPlayers...)
 	return r
 }
 
-// Action applys team's movements to the battle and return if the battle should be over
+// Action apply team's movements to the battle and return if the battle should be over
 func (l *JudgeBattleLeg) Action(action *Action) bool {
 	return false
-}
-
-func (l *JudgeBattleLeg) nextRound() *JudgeBattleRound {
-	// todo
-
-	return &JudgeBattleRound{}
-}
-
-// JudgeBattleRound is
-type JudgeBattleRound struct {
-	Leg   *JudgeBattleLeg
-	Index int
 }

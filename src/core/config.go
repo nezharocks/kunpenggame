@@ -3,7 +3,7 @@ package core
 // NetworkMode is an extension mode which support server/client debugging through Internet.
 var NetworkMode = true
 
-const defaultMapData = Map1
+const defaultMapData = Map2
 
 const defaultVision = 4
 

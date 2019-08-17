@@ -14,7 +14,7 @@ type Map struct {
 	Meteors          []*Meteor               `json:"meteor"`
 	Tunnels          []*Tunnel               `json:"tunnel"`
 	Wormholes        []*Wormhole             `json:"wormhole"`
-	Powers           []*Power                `json:"power"`
+	Powers           []*Power                `json:"-"`
 	TeamPlaceHolders [TeamNum][]*PlaceHolder `json:"-"`
 }
 
@@ -118,4 +118,46 @@ func (m *Map) JSON() string {
 		return err.Error()
 	}
 	return string(bytes)
+}
+
+// GetVision is
+func (m Map) GetVision(x, y int) *Vision {
+	v := m.Vision
+	rbx := m.Width - 1
+	rby := m.Height - 1
+	x1 := x - v
+	if x1 < 0 {
+		x1 = 0
+	}
+	x2 := x + v
+	if x2 > rbx {
+		x2 = rbx
+	}
+	y1 := y - v
+	if y1 < 0 {
+		y1 = 0
+	}
+	y2 := y + v
+	if y2 > rby {
+		y2 = rby
+	}
+	return &Vision{X1: x1, Y1: y1, X2: x2, Y2: y2}
+}
+
+// Vision is
+type Vision struct {
+	X1, Y1 int // the left and top point
+	X2, Y2 int // the left and top point
+	// Width, Height int // include the start point pixel
+}
+
+// InVision is
+func (v Vision) InVision(x, y int) bool {
+	if x < v.X1 || x > v.X2 {
+		return false
+	}
+	if y < v.Y1 || y > v.Y2 {
+		return false
+	}
+	return true
 }
