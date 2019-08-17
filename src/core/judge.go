@@ -180,16 +180,16 @@ func (b *JudgeBattle) initTeamPlayers() {
 	// generate players for the first team
 	players := make([]int, n, n)
 	for i := 0; i < n; i++ {
-		id++
 		players[i] = id
+		id++
 	}
 	b.TeamsPlayers[0] = players
 
 	// generate players for the second team
 	players = make([]int, n, n)
 	for i := 0; i < n; i++ {
-		id++
 		players[i] = id
+		id++
 	}
 	b.TeamsPlayers[1] = players
 }
