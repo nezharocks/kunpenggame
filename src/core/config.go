@@ -13,4 +13,4 @@ const defaultHeight = 20
 
 const debugMessage = false
 
-const debugRound = false
+const debugRound = true

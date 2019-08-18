@@ -53,7 +53,7 @@ func TestJudge_NewBattle(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *JudgeBattle
+		want   *GameBattle
 	}{
 		{
 			name: "NewBattle - ok",
@@ -71,7 +71,7 @@ func TestJudge_NewBattle(t *testing.T) {
 				teamBattle1: tb1,
 				teamBattle2: tb2,
 			},
-			want: &JudgeBattle{
+			want: &GameBattle{
 				Judge:       j,
 				TeamBattles: [2]TeamBattle{tb1, tb2},
 				TeamsPlayers: [2][]int{

@@ -36,8 +36,8 @@ type GameAgent interface {
 	GetErrorCh() chan error
 }
 
-// GameBattle is
-type GameBattle interface {
+// Game is
+type Game interface {
 	NewTeamID() int
 	Battle(team TeamAgent)
 }

@@ -77,9 +77,10 @@ func (m *GameOver) Message() *Message {
 
 // PlayerAction is
 type PlayerAction struct {
-	Team   int      `json:"team"`
-	Player int      `json:"player_id"`
-	Move   []string `json:"move"`
+	Team     int       `json:"team"`
+	Player   int       `json:"player_id"`
+	Move     []string  `json:"move"`
+	Movement *Movement `json:"-"`
 }
 
 // LegStartTeam is
