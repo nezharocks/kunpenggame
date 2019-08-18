@@ -74,7 +74,7 @@ func TestGameConfig_NewBattle(t *testing.T) {
 			want: &GameBattle{
 				Config:      j,
 				TeamBattles: [2]TeamBattle{tb1, tb2},
-				TeamsPlayers: [2][]int{
+				TeamPlayers: [2][]int{
 					[]int{1, 2, 3, 4},
 					[]int{5, 6, 7, 8},
 				},

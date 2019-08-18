@@ -6,12 +6,13 @@ import (
 
 // GameBattle is
 type GameBattle struct {
-	Config       *GameConfig
-	TeamBattles  [TeamNum]TeamBattle
-	Teams        [TeamNum]*Team
-	TeamsPlayers [TeamNum][]int
-	Map          *Map
-	Legs         []*GameBattleLeg
+	Config      *GameConfig
+	TeamBattles [TeamNum]TeamBattle
+	TeamIDs     [TeamNum]int
+	Teams       [TeamNum]*Team
+	TeamPlayers [TeamNum][]int
+	Legs        []*GameBattleLeg
+	Map         *Map
 }
 
 // Run is
@@ -19,9 +20,6 @@ func (b *GameBattle) Run() {
 	// run legs to battle
 	for _, leg := range b.Legs {
 		leg.Run()
-		for i := 0; i < TeamNum; i++ {
-			b.Teams[i].Point += leg.Teams[i].Point
-		}
 	}
 
 	// send game over commands
@@ -36,48 +34,41 @@ func (b *GameBattle) Run() {
 		team := b.Teams[i]
 		log.Printf("team \t%v\t%v\n", team.ID, team.Point)
 	}
+
+	// todo: save the battle results to DB
 }
 
 // Init is
-func (b *GameBattle) init() {
+func (b *GameBattle) Init() {
 	b.Map = b.Config.Map
 	// player := b.Map.TeamPlaceHolders[1][0]
 	// player.X = 1
 	// player.Y = 8
 
-	b.initTeams()
-	b.initTeamPlayers()
-	b.initLegs()
-}
-
-func (b *GameBattle) initTeams() {
+	// init teams and players
+	pn, pid := b.Config.PlayerNum, 0
 	for i := 0; i < TeamNum; i++ {
+		b.TeamIDs[i] = b.TeamBattles[i].GetTeamID()
 		b.Teams[i] = &Team{
-			ID:   b.TeamBattles[i].GetTeamID(),
-			Name: b.TeamBattles[i].GetTeamName(),
+			ID:    b.TeamBattles[i].GetTeamID(),
+			Name:  b.TeamBattles[i].GetTeamName(),
+			Force: b.Config.TeamForces[i].String(),
+		}
+		b.TeamPlayers[i] = make([]int, pn, pn)
+		for j := 0; j < pn; j++ {
+			b.TeamPlayers[i][j] = pid
+			pid++
 		}
 	}
+	b.newLegs()
 }
 
-func (b *GameBattle) initTeamPlayers() {
-	id := 0
-	n := b.Config.PlayerNum
-
-	// generate players for the first team
-	players := make([]int, n, n)
+func (b *GameBattle) newLegs() {
+	n := b.Config.LegNum
+	b.Legs = make([]*GameBattleLeg, n, n)
 	for i := 0; i < n; i++ {
-		players[i] = id
-		id++
+		b.Legs[i] = b.newLeg(i)
 	}
-	b.TeamsPlayers[0] = players
-
-	// generate players for the second team
-	players = make([]int, n, n)
-	for i := 0; i < n; i++ {
-		players[i] = id
-		id++
-	}
-	b.TeamsPlayers[1] = players
 }
 
 func (b *GameBattle) newLeg(index int) *GameBattleLeg {
@@ -91,7 +82,7 @@ func (b *GameBattle) newLeg(index int) *GameBattleLeg {
 		force := b.Config.TeamForces[i]
 		leg.Teams[i] = &Team{
 			ID:         b.TeamBattles[i].GetTeamID(),
-			Players:    b.TeamsPlayers[i],
+			Players:    b.TeamPlayers[i],
 			Force:      force.String(),
 			RemainLife: b.Config.PlayerLives - b.Config.PlayerNum,
 		}
@@ -104,42 +95,54 @@ func (b *GameBattle) newLeg(index int) *GameBattleLeg {
 		phIndex := TeamPlaceHolderIndices[index][t]
 		holders := b.Map.TeamPlaceHolders[phIndex]
 		holderNum := len(holders)
-		leg.TeamsPlayers[t] = make([]*Player, playerNum, playerNum)
+		leg.TeamPlayers[t] = make([]*Player, playerNum, playerNum)
 		for i := 0; i < playerNum; i++ {
 			playerIndex := orders[i]
 			holder := holders[playerIndex%holderNum]
 			teamID := b.TeamBattles[t].GetTeamID()
-			playerID := b.TeamsPlayers[t][playerIndex]
-			leg.TeamsPlayers[t][playerIndex] = b.newPlayer(teamID, playerID, holder)
+			playerID := b.TeamPlayers[t][playerIndex]
+			player := &Player{Team: teamID, ID: playerID, X: holder.X, Y: holder.Y}
+			leg.TeamPlayers[t][playerIndex] = player
+			leg.IDPlayers[playerID] = player
 		}
 	}
-
-	leg.TeamMap = make(map[TeamBattle]*Team, TeamNum)
-	leg.PlayersMap = make(map[TeamBattle][]*Player, b.Config.PlayerNum)
-	for t := 0; t < TeamNum; t++ {
-		tb := b.TeamBattles[t]
-		leg.TeamMap[tb] = leg.Teams[t]
-		leg.PlayersMap[tb] = leg.TeamsPlayers[t]
-	}
-
-	leg.Table = NewTable(b.Map, b.TeamBattles, leg.TeamMap, leg.PlayersMap)
+	leg.Table = NewTable(leg)
 	return leg
 }
 
-func (b *GameBattle) newPlayer(teamID, playerID int, placeholder *PlaceHolder) *Player {
-	player := &Player{
-		Team: teamID,
-		ID:   playerID,
-		X:    placeholder.X,
-		Y:    placeholder.Y,
+// TeamIndex id
+func (b *GameBattle) TeamIndex(teamID int) int {
+	for i, id := range b.TeamIDs {
+		if id == teamID {
+			return i
+		}
 	}
-	return player
+	return -1
 }
 
-func (b *GameBattle) initLegs() {
-	n := b.Config.LegNum
-	b.Legs = make([]*GameBattleLeg, n, n)
-	for i := 0; i < n; i++ {
-		b.Legs[i] = b.newLeg(i)
+// RivalID is
+func (b *GameBattle) RivalID(teamID int) (id int, index int) {
+	for i, id := range b.TeamIDs {
+		if id != teamID {
+			return id, i
+		}
 	}
+	return -1, -1
+}
+
+// GetPowerForce is
+func (b *GameBattle) GetPowerForce(legIndex, partIndex int) TeamForce {
+	return b.Config.BattleModes[legIndex][partIndex].PowerForce()
+}
+
+// GetEscapeeHunter is
+func (b *GameBattle) GetEscapeeHunter(powerForce TeamForce) (escapee, hunter TeamBattle) {
+	for i, team := range b.Teams {
+		if powerForce.Equal(team.Force) {
+			hunter = b.TeamBattles[i]
+		} else {
+			escapee = b.TeamBattles[i]
+		}
+	}
+	return
 }

@@ -2,15 +2,16 @@ package core
 
 // Table is
 type Table struct {
-	Tiles       [][]*Tile
-	Map         *Map
-	TeamBattles [TeamNum]TeamBattle
-	TeamMap     map[TeamBattle]*Team
-	PlayersMap  map[TeamBattle][]*Player
+	Tiles [][]*Tile
+	Leg   *GameBattleLeg
+	Map   *Map
 }
 
 // NewTable is
-func NewTable(m *Map, teamBattles [TeamNum]TeamBattle, teamMap map[TeamBattle]*Team, playersMap map[TeamBattle][]*Player) *Table {
+func NewTable(leg *GameBattleLeg) *Table {
+	m := leg.Battle.Map
+
+	// init the 2x2 matrix
 	tiles := make([][]*Tile, m.Width, m.Width)
 	for i := 0; i < m.Width; i++ {
 		tiles[i] = make([]*Tile, m.Height, m.Height)
@@ -37,7 +38,7 @@ func NewTable(m *Map, teamBattles [TeamNum]TeamBattle, teamMap map[TeamBattle]*T
 	}
 
 	// init players
-	for _, players := range playersMap {
+	for _, players := range leg.TeamPlayers {
 		for _, player := range players {
 			tile := NewTileHolder()
 			tile.AddPlayer(player)
@@ -57,52 +58,16 @@ func NewTable(m *Map, teamBattles [TeamNum]TeamBattle, teamMap map[TeamBattle]*T
 	}
 
 	return &Table{
-		Tiles:       tiles,
-		Map:         m,
-		TeamMap:     teamMap,
-		PlayersMap:  playersMap,
-		TeamBattles: teamBattles,
+		Tiles: tiles,
+		Leg:   leg,
+		Map:   m,
 	}
-}
-
-// TeamActivePlayers is
-func (t *Table) TeamActivePlayers(tb TeamBattle) []*Player {
-	players := t.PlayersMap[tb]
-	activePlayers := make([]*Player, 0, len(players))
-	for _, p := range players {
-		if !p.IsAsleep() {
-			activePlayers = append(activePlayers, p)
-		}
-	}
-	return activePlayers
-}
-
-// TeamAlivePlayers is
-func (t *Table) TeamAlivePlayers(tb TeamBattle) []*Player {
-	players := t.PlayersMap[tb]
-	activePlayers := make([]*Player, 0, len(players))
-	for _, p := range players {
-		if !p.IsDead() {
-			activePlayers = append(activePlayers, p)
-		}
-	}
-	return activePlayers
-}
-
-// GetRival is
-func (t *Table) GetRival(tb TeamBattle) TeamBattle {
-	for _, v := range t.TeamBattles {
-		if v != tb {
-			return v
-		}
-	}
-	return nil
 }
 
 // GetVisiblePowers is
-func (t *Table) GetVisiblePowers(visions []*Vision) []*Power {
-	ret := make([]*Power, 0, len(t.Map.Powers))
-	for _, p := range t.Map.Powers {
+func GetVisiblePowers(powers []*Power, visions []*Vision) []*Power {
+	ret := make([]*Power, 0, len(powers))
+	for _, p := range powers {
 		// fmt.Printf("%+v\n", *p)
 		if p == nil {
 			continue
@@ -121,7 +86,7 @@ func (t *Table) GetVisiblePowers(visions []*Vision) []*Power {
 }
 
 // GetVisiblePlayers is
-func (t *Table) GetVisiblePlayers(players []*Player, visions []*Vision) []*Player {
+func GetVisiblePlayers(players []*Player, visions []*Vision) []*Player {
 	ret := make([]*Player, 0, len(players))
 	for _, p := range players {
 		if p.IsAsleep() {
@@ -136,4 +101,9 @@ func (t *Table) GetVisiblePlayers(players []*Player, visions []*Vision) []*Playe
 		}
 	}
 	return ret
+}
+
+// Move is
+func (t *Table) Move(player *Player, powerForce TeamForce, move Movement) {
+	// todo
 }

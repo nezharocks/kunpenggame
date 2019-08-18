@@ -40,13 +40,14 @@ type Team struct {
 
 // Player is one of the member of a team which joins the game as a game player
 type Player struct {
-	Team  int  `json:"team"`
-	ID    int  `json:"id"`
-	Point int  `json:"score"`
-	Sleep int  `json:"sleep"`
-	X     int  `json:"x"`
-	Y     int  `json:"y"`
-	Dead  bool `json:"-"`
+	Team  int       `json:"team"`
+	ID    int       `json:"id"`
+	Point int       `json:"score"`
+	Sleep int       `json:"sleep"`
+	X     int       `json:"x"`
+	Y     int       `json:"y"`
+	Dead  bool      `json:"-"`
+	Force TeamForce `json:"-"`
 }
 
 // IsDead is

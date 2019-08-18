@@ -107,12 +107,11 @@ func (g *GameConfig) NewTeamID() int {
 }
 
 // NewBattle is
-func (g *GameConfig) NewBattle(teamBattle1, teamBattle2 TeamBattle) *GameBattle {
+func (g *GameConfig) NewBattle(guest, host TeamBattle) *GameBattle {
 	b := &GameBattle{
-		Config: g,
+		Config:      g,
+		TeamBattles: [TeamNum]TeamBattle{guest, host},
 	}
-	b.TeamBattles[0] = teamBattle1
-	b.TeamBattles[1] = teamBattle2
-	b.init()
+	b.Init()
 	return b
 }

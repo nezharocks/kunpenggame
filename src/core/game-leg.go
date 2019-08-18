@@ -2,48 +2,26 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"sort"
 	"time"
 )
 
 // GameBattleLeg is
 type GameBattleLeg struct {
-	Battle       *GameBattle `json:"-"`
-	Index        int
-	Teams        [TeamNum]*Team
-	TeamsPlayers [TeamNum][]*Player
-	TeamMap      map[TeamBattle]*Team
-	PlayersMap   map[TeamBattle][]*Player
-	Table        *Table `json:"-"`
+	Battle      *GameBattle `json:"-"`
+	Index       int
+	Teams       [TeamNum]*Team
+	TeamPlayers [TeamNum][]*Player
+	IDPlayers   map[int]*Player
+	Table       *Table `json:"-"`
 }
 
 // JSON is
 func (l *GameBattleLeg) JSON() string {
-	bytes, err := json.MarshalIndent(l, "", "    ")
-	// bytes, err := json.Marshal(l)
-	if err != nil {
-		return err.Error()
-	}
+	bytes, _ := json.MarshalIndent(l, "", "    ")
 	return string(bytes)
-}
-
-// getPowerForce is
-// index is mode index in the same leg
-func (l *GameBattleLeg) getPowerForce(index int) TeamForce {
-	mode := l.Battle.Config.BattleModes[l.Index][index]
-	return mode.PowerForce()
-}
-
-// getTeamBattles is
-func (l *GameBattleLeg) getTeamBattles(powerForce TeamForce) (escapee, hunter TeamBattle) {
-	for i, team := range l.Teams {
-		if powerForce.Equal(team.Force) {
-			hunter = l.Battle.TeamBattles[i]
-		} else {
-			escapee = l.Battle.TeamBattles[i]
-		}
-	}
-	return
 }
 
 // Run is
@@ -54,9 +32,9 @@ func (l *GameBattleLeg) Run() {
 		hunter  TeamBattle
 		round   *Round
 	)
-
-	powerForce := l.getPowerForce(0) // first half in a leg
-	escapee, hunter = l.getTeamBattles(powerForce)
+	partIndex := 0 // the first part of the leg
+	powerForce := l.Battle.GetPowerForce(l.Index, partIndex)
+	escapee, hunter = l.Battle.GetEscapeeHunter(powerForce)
 
 	// send leg starts
 	legStart := &LegStart{
@@ -77,13 +55,14 @@ func (l *GameBattleLeg) Run() {
 
 	// handle rounds and actions in the leg
 loop_rounds:
-	for i := 0; i < fullRound; i++ {
-		if i == semiRound {
-			powerForce := l.getPowerForce(1) // second half in a leg
-			escapee, hunter = l.getTeamBattles(powerForce)
+	for rid := 0; rid < fullRound; rid++ {
+		if rid == semiRound {
+			partIndex++ // the second part of the leg
+			powerForce := l.Battle.GetPowerForce(l.Index, partIndex)
+			escapee, hunter = l.Battle.GetEscapeeHunter(powerForce)
 		}
 		// escapee action
-		round = l.Round(i, escapee, powerForce)
+		round = l.Round(rid, escapee.GetTeamID(), powerForce)
 		if debugRound {
 			log.Printf("%+v\n", round.Message())
 		}
@@ -97,15 +76,15 @@ loop_rounds:
 			if debugRound {
 				log.Printf("%+v\n", action.Message())
 			}
-			if l.Action(&action, i, escapee, powerForce) {
+			if l.Action(&action, rid, escapee.GetTeamID(), powerForce) {
 				break loop_rounds
 			}
 		case <-time.After(time.Millisecond * ActionTimeout):
-			log.Printf("team %v timeout at the %vth round of the %vth leg\n", escapee.GetTeamID(), i, l.Index)
+			log.Printf("team %v timeout at the %vth round of the %vth leg\n", escapee.GetTeamID(), rid, l.Index)
 		}
 
 		// hunter action
-		round = l.Round(i, hunter, powerForce)
+		round = l.Round(rid, hunter.GetTeamID(), powerForce)
 		if debugRound {
 			log.Printf("%+v\n", round.Message())
 		}
@@ -119,11 +98,11 @@ loop_rounds:
 			if debugRound {
 				log.Printf("%+v\n", action.Message())
 			}
-			if l.Action(&action, i, hunter, powerForce) {
+			if l.Action(&action, rid, hunter.GetTeamID(), powerForce) {
 				break loop_rounds
 			}
 		case <-time.After(time.Millisecond * ActionTimeout):
-			log.Printf("team %v timeout at the %vth round of the %vth leg\n", hunter.GetTeamID(), i, l.Index)
+			log.Printf("team %v timeout at the %vth round of the %vth leg\n", hunter.GetTeamID(), rid, l.Index)
 		}
 	}
 
@@ -139,12 +118,17 @@ loop_rounds:
 	if err != nil {
 		log.Println(err)
 	}
+
+	// update teams's point for the battle
+	for i := 0; i < TeamNum; i++ {
+		l.Battle.Teams[i].Point += l.Teams[i].Point
+	}
 }
 
 // Round is
-func (l *GameBattleLeg) Round(index int, tb TeamBattle, powerForce TeamForce) *Round {
+func (l *GameBattleLeg) Round(roundID, teamID int, powerForce TeamForce) *Round {
 	r := &Round{
-		ID:   index,
+		ID:   roundID,
 		Mode: powerForce.String(),
 	}
 	// calculate teams
@@ -158,7 +142,7 @@ func (l *GameBattleLeg) Round(index int, tb TeamBattle, powerForce TeamForce) *R
 	r.Teams = roundTeams[:]
 
 	// calculate the visions of the active players
-	activePlayers := l.Table.TeamActivePlayers(tb)
+	activePlayers := l.ActivePlayers(teamID)
 	visions := make([]*Vision, 0, l.Battle.Config.PlayerNum)
 	for _, p := range activePlayers {
 		v := l.Battle.Map.GetVision(p.X, p.Y)
@@ -167,21 +151,56 @@ func (l *GameBattleLeg) Round(index int, tb TeamBattle, powerForce TeamForce) *R
 	}
 
 	// calculate powers and players (including rival's and mime) in the visions
-	r.Powers = l.Table.GetVisiblePowers(visions)
-	currentPlayers := l.Table.TeamAlivePlayers(tb)
-	rival := l.Table.GetRival(tb)
-	rivalPlayers := l.Table.GetVisiblePlayers(l.PlayersMap[rival], visions)
-	r.Players = append(currentPlayers, rivalPlayers...)
+	r.Powers = GetVisiblePowers(l.Battle.Map.Powers, visions)
+	currentPlayers := l.AlivePlayers(teamID)
+	_, rivalIndex := l.Battle.RivalID(teamID)
+	visibleRivalPlayers := GetVisiblePlayers(l.TeamPlayers[rivalIndex], visions)
+	r.Players = append(currentPlayers, visibleRivalPlayers...)
 	return r
 }
 
 // Action apply team's movements to the battle and return if the battle should be over
-func (l *GameBattleLeg) Action(action *Action, index int, tb TeamBattle, powerForce TeamForce) bool {
-	for _, a := range action.Actions {
-		a.Movement = NewMovement(a.Move)
-		// fmt.Println(a.Player)
+func (l *GameBattleLeg) Action(action *Action, roundID, teamID int, powerForce TeamForce) bool {
+	actions := action.Actions
+	sort.Slice(actions, func(i, j int) bool {
+		return actions[i].Player < actions[j].Player
+	})
+	for _, a := range actions {
+		move := NewMovement(a.Move)
+		player, ok := l.IDPlayers[a.Player]
+		if !ok {
+			continue
+		}
+		l.Table.Move(player, powerForce, move)
+		fmt.Println(a.Player)
 	}
 
-	// l.TeamsPlayers
+	// l.TeamPlayers
 	return false
+}
+
+// ActivePlayers is
+func (l *GameBattleLeg) ActivePlayers(teamID int) []*Player {
+	teamIndex := l.Battle.TeamIndex(teamID)
+	players := l.TeamPlayers[teamIndex]
+	activePlayers := make([]*Player, 0, len(players))
+	for _, p := range players {
+		if !p.IsAsleep() {
+			activePlayers = append(activePlayers, p)
+		}
+	}
+	return activePlayers
+}
+
+// AlivePlayers is
+func (l *GameBattleLeg) AlivePlayers(teamID int) []*Player {
+	teamIndex := l.Battle.TeamIndex(teamID)
+	players := l.TeamPlayers[teamIndex]
+	activePlayers := make([]*Player, 0, len(players))
+	for _, p := range players {
+		if !p.IsDead() {
+			activePlayers = append(activePlayers, p)
+		}
+	}
+	return activePlayers
 }
