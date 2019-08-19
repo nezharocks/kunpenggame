@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Battle struct {
 
 // NewBattle is
 func NewBattle(teamID int, battleTime time.Time) *Battle {
+	rand.Seed(time.Now().Unix())
 	return &Battle{
 		TeamID: teamID,
 		Time:   battleTime,
@@ -155,9 +157,9 @@ func (b *Battle) CalcAction() (*Action, error) {
 	action := &Action{
 		ID: round.ID,
 	}
-	myPlayers := make([]*Player, 0, 4)
+	myPlayers := make([]*Player, 0, DefaultPlayerNum)
 	for _, p := range round.Players {
-		if p.TeamID == b.TeamID && p.Point == 0 {
+		if p.TeamID == b.TeamID && p.Sleep == 0 {
 			myPlayers = append(myPlayers, p)
 		}
 	}
@@ -167,14 +169,19 @@ func (b *Battle) CalcAction() (*Action, error) {
 		action.Actions[i] = &PlayerAction{
 			Team:   p.TeamID,
 			Player: p.ID,
-			Move:   []string{},
+			Move:   b.randomMove(),
 		}
 	}
 
 	return action, nil
 }
 
-func (b *Battle) test() (*Action, error) {
+var allMoves = []string{up, down, left, right, stay}
 
-	return nil, nil
+func (b *Battle) randomMove() []string {
+	m := allMoves[rand.Intn(len(allMoves))]
+	if m == stay {
+		return []string{}
+	}
+	return []string{m}
 }

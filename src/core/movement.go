@@ -1,11 +1,15 @@
 package core
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 // Movement is
 type Movement struct {
-	Dx int
-	Dy int
+	Dx     int
+	Dy     int
+	Action string
 }
 
 const (
@@ -13,23 +17,24 @@ const (
 	down  = "down"
 	left  = "left"
 	right = "right"
+	stay  = ""
 )
 
 var (
 	// Stay stay still
-	Stay = Movement{0, 0}
+	Stay = Movement{0, 0, stay}
 
 	// MoveUp moves up a tile
-	MoveUp = Movement{0, -1}
+	MoveUp = Movement{0, -1, up}
 
 	// MoveDown moves down a tile
-	MoveDown = Movement{0, 1}
+	MoveDown = Movement{0, 1, down}
 
 	// MoveLeft moves left a tile
-	MoveLeft = Movement{-1, -0}
+	MoveLeft = Movement{-1, 0, left}
 
 	// MoveRight moves right a tile
-	MoveRight = Movement{1, 0}
+	MoveRight = Movement{1, 0, right}
 )
 
 // NewMovementFromAction is
@@ -68,4 +73,8 @@ func NewMovementFromTunnel(dir string) *Movement {
 		log.Printf("wrong tunnel direction %q", dir)
 		return nil
 	}
+}
+
+func (m Movement) String() string {
+	return fmt.Sprintf("%v - %v, %v", m.Action, m.Dx, m.Dy)
 }

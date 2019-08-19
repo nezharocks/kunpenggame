@@ -1,9 +1,12 @@
 package core
 
 // NetworkMode is an extension mode which support server/client debugging through Internet.
-var NetworkMode = true
+const NetworkMode = false
 
-const defaultMapData = Map2
+// ServerTimeout is the timeout which client will wait to exit until server responses
+const ServerTimeout = 1
+
+const defaultMapData = Map3
 
 const defaultVision = 4
 
@@ -13,4 +16,6 @@ const defaultHeight = 20
 
 const debugMessage = false
 
-const debugRound = true
+const debugLeg = false
+
+const debugRound = false

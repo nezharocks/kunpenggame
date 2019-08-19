@@ -40,7 +40,9 @@ func (l *GameBattleLeg) Run() {
 		Map:   l.Battle.Map,
 		Teams: l.Teams[:], // todo
 	}
-	log.Printf("%+v\n", legStart.Message())
+	if debugLeg {
+		log.Printf("%+v\n", legStart.Message())
+	}
 	err = escapee.LegStart(legStart)
 	if err != nil {
 		log.Println(err)
@@ -108,6 +110,9 @@ loop_rounds:
 	// send leg ends
 	legEnd := &LegEnd{
 		Teams: l.Teams[:],
+	}
+	if debugLeg {
+		log.Printf("%+v\n", legEnd.Message())
 	}
 	err = escapee.LegEnd(legEnd)
 	if err != nil {

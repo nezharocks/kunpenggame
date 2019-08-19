@@ -10,7 +10,7 @@ type Power struct {
 }
 
 func (o Power) String() string {
-	return fmt.Sprintf("power-%v@%v,%v", o.Point, o.X, o.Y)
+	return fmt.Sprintf("power-%v@tile(%v,%v)", o.Point, o.X, o.Y)
 }
 
 // Meteor is
@@ -20,7 +20,7 @@ type Meteor struct {
 }
 
 func (o Meteor) String() string {
-	return fmt.Sprintf("meteor@%v,%v", o.X, o.Y)
+	return fmt.Sprintf("meteor@tile(%v,%v)", o.X, o.Y)
 }
 
 // Wormhole is
@@ -32,7 +32,7 @@ type Wormhole struct {
 }
 
 func (o Wormhole) String() string {
-	return fmt.Sprintf("wormhole-%v@%v,%v", o.Name, o.X, o.Y)
+	return fmt.Sprintf("wormhole-%v@tile(%v,%v)", o.Name, o.X, o.Y)
 }
 
 // PlaceHolder is

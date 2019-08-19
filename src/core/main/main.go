@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	core ".."
 )
 
 func main() {
-	fmt.Println("hi")
+	start := time.Now()
 	game := core.NewFirstGame(core.Map1, 4, 20, 20)
 	err := game.Init()
 	if err != nil {
@@ -18,8 +19,7 @@ func main() {
 	guest.SetTeamID(game.NewTeamID())
 	host := core.NewTeamImpl("ai")
 	host.SetTeamID(game.NewTeamID())
-	// ts := []core.TeamBattle{t1, t2}
-
 	battle := game.NewBattle(guest, host)
 	battle.Run()
+	fmt.Println("time spent:", time.Since(start))
 }

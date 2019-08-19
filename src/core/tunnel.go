@@ -33,5 +33,5 @@ func NewTunnelFromChar(c rune, x, y int) *Tunnel {
 }
 
 func (o Tunnel) String() string {
-	return fmt.Sprintf("tunnel-%v@%v,%v", o.Direction, o.X, o.Y)
+	return fmt.Sprintf("tunnel-%v@tile(%v,%v)", o.Direction, o.X, o.Y)
 }

@@ -4,9 +4,10 @@ import "log"
 
 // Table is
 type Table struct {
-	Tiles [][]*Tile
-	Leg   *GameBattleLeg
-	Map   *Map
+	Tiles         [][]*Tile
+	Leg           *GameBattleLeg
+	Map           *Map
+	tunnelHistory []*Tile
 }
 
 // NewTable is
@@ -107,22 +108,8 @@ func GetVisiblePlayers(players []*Player, visions []*Vision) []*Player {
 
 // Move is
 func (t *Table) Move(player *Player, move *Movement, powerForce TeamForce) {
-	// calculate next tile's coordinates
-	x, y := player.X+move.Dx, player.Y+move.Dy
-	w, h := t.Map.Width-1, t.Map.Height-1
-	if x < 0 {
-		x = 0
-	} else if x > w {
-		x = w
-	}
-	if y < 0 {
-		y = 0
-	} else if y > h {
-		y = h
-	}
-
-	// stay still
-	if player.X == x && player.Y == y {
+	x, y, still := t.nextCoordinates(player.X, player.Y, move)
+	if still {
 		return
 	}
 	t.EnterTile(player, t.Tiles[x][y], powerForce)
@@ -142,6 +129,7 @@ func (t *Table) EnterTile(player *Player, tile *Tile, powerForce TeamForce) {
 	case TileTunnel:
 		t.enterTunnel(player, tile, powerForce)
 	}
+	t.tunnelHistory = nil
 }
 
 func (t *Table) enterPower(player *Player, tileIn *Tile) {
@@ -214,12 +202,13 @@ func (t *Table) enterWormhole(player *Player, tile *Tile, powerForce TeamForce) 
 		log.Println("state illegal - tile or tile's wormhole has no wormhole")
 		return
 	}
-	wh := tile.Wormhole.Exit
-	x, y := wh.X, wh.Y
-	t.enterHolder(player, t.Tiles[x][y], powerForce)
+	exit := tile.Wormhole.Exit
+	t.enterHolder(player, t.Tiles[exit.X][exit.Y], powerForce)
 }
 
 func (t *Table) enterTunnel(player *Player, tile *Tile, powerForce TeamForce) {
+	log.Println(tile.String())
+
 	if tile.Tunnel == nil {
 		log.Println("state illegal - tile has no tunnel")
 		log.Printf("%v skip moving to the empty tunnel", player.String())
@@ -227,9 +216,33 @@ func (t *Table) enterTunnel(player *Player, tile *Tile, powerForce TeamForce) {
 	}
 	move := NewMovementFromTunnel(tile.Tunnel.Direction)
 	if move == nil {
-		log.Printf("%v fail to get movement from %v\n", player.String(), tile.Tunnel.String())
+		log.Printf("%v get null movement from %v\n", player.String(), tile.Tunnel.String())
 		log.Printf("%v skip moving to %v", player.String(), tile.Tunnel.String())
 		return
 	}
-	t.Move(player, move, powerForce)
+
+	x, y, still := t.nextCoordinates(tile.X, tile.Y, move)
+	if still {
+		log.Printf("%v get wrong movement from %v\n", player.String(), tile.Tunnel.String())
+		log.Printf("%v skip moving to %v", player.String(), tile.Tunnel.String())
+		return
+	}
+	t.EnterTile(player, t.Tiles[x][y], powerForce)
+}
+
+func (t *Table) nextCoordinates(tx, ty int, move *Movement) (x, y int, still bool) {
+	x, y = tx+move.Dx, ty+move.Dy
+	w, h := t.Map.Width-1, t.Map.Height-1
+	if x < 0 {
+		x = 0
+	} else if x > w {
+		x = w
+	}
+	if y < 0 {
+		y = 0
+	} else if y > h {
+		y = h
+	}
+	still = tx == x && ty == y
+	return x, y, still
 }

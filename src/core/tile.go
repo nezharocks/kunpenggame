@@ -1,6 +1,9 @@
 package core
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 // Tile is
 type Tile struct {
@@ -178,31 +181,19 @@ func (t *Tile) GetPlayer() *Player {
 	}
 	return t.Player
 }
-
-// // Enter is
-// func (t *Tile) Enter(player *Player, powerForce TeamForce) {
-// 	switch t.Type {
-// 	case TileHolder:
-// 		t.enterHolder(player, powerForce)
-// 	case TilePower:
-// 		t.enterPower(player)
-// 	case TileWormhole:
-// 		t.enterWormhome(player, powerForce)
-// 	case TileMeteor:
-// 		// stay still and do nothing
-// 	case TileTunnel:
-// 		t.enterTunnel(player, powerForce)
-// 	}
-// }
-
-// func (t *Tile) enterPower(player *Player) {
-// }
-
-// func (t *Tile) enterHolder(player *Player, powerForce TeamForce) {
-// }
-
-// func (t *Tile) enterWormhome(player *Player, powerForce TeamForce) {
-// }
-
-// func (t *Tile) enterTunnel(player *Player, powerForce TeamForce) {
-// }
+func (t *Tile) String() string {
+	s := ""
+	switch t.Type {
+	case TileHolder:
+		s = fmt.Sprintf("holder@tile(%v,%v)", t.X, t.Y)
+	case TilePower:
+		s = t.Power.String()
+	case TileWormhole:
+		s = t.Wormhole.String()
+	case TileMeteor:
+		s = t.Meteor.String()
+	case TileTunnel:
+		s = t.Tunnel.String()
+	}
+	return s
+}

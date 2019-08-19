@@ -89,7 +89,7 @@ loop:
 			s.onGameOver(&gameOver)
 		case err := <-s.GameAgent.GetErrorCh():
 			s.ErrCh <- err
-		case <-time.After(time.Second * 10): // server timeout
+		case <-time.After(time.Second * ServerTimeout): // server timeout
 			s.Stop()
 		case <-s.StopCh:
 			break loop
