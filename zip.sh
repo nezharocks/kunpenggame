@@ -1,1 +1,1 @@
-git archive -o henryleu.zip HEAD
+git archive -o dist/henryleu.zip HEAD
