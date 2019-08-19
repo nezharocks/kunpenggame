@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 // Tunnel is
 type Tunnel struct {
 	Direction string `json:"direction"`
@@ -28,4 +30,8 @@ func NewTunnelFromChar(c rune, x, y int) *Tunnel {
 		dir = dirRight
 	}
 	return &Tunnel{dir, x, y}
+}
+
+func (o Tunnel) String() string {
+	return fmt.Sprintf("tunnel-%v@%v,%v", o.Direction, o.X, o.Y)
 }

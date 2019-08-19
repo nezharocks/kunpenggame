@@ -25,6 +25,12 @@ const (
 	// DefaultPlayerLives is
 	DefaultPlayerLives = 8
 
+	// Bounty is a team's rewarded point for killing a prey
+	Bounty = 10
+
+	// SleepRound is the number of waiting rounds for revival
+	SleepRound = 5
+
 	// ActionTimeout is
 	ActionTimeout = 800
 )

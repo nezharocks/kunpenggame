@@ -6,14 +6,6 @@ import (
 	"time"
 )
 
-const (
-	//Beat means eat mode
-	Beat = "beat"
-
-	//Think means run mode
-	Think = "think"
-)
-
 // Battle is
 type Battle struct {
 	TeamID  int
@@ -95,8 +87,8 @@ func (b *Battle) StartLeg(legStart *LegStart) *Leg {
 	for _, t := range leg.Teams {
 		for _, p := range t.Players {
 			leg.Players[p] = &Player{
-				Team: t.ID,
-				ID:   p,
+				TeamID: t.ID,
+				ID:     p,
 			}
 		}
 	}
@@ -165,7 +157,7 @@ func (b *Battle) CalcAction() (*Action, error) {
 	}
 	myPlayers := make([]*Player, 0, 4)
 	for _, p := range round.Players {
-		if p.Team == b.TeamID && p.Point == 0 {
+		if p.TeamID == b.TeamID && p.Point == 0 {
 			myPlayers = append(myPlayers, p)
 		}
 	}
@@ -173,7 +165,7 @@ func (b *Battle) CalcAction() (*Action, error) {
 	action.Actions = make([]*PlayerAction, l, l)
 	for i, p := range myPlayers {
 		action.Actions[i] = &PlayerAction{
-			Team:   p.Team,
+			Team:   p.TeamID,
 			Player: p.ID,
 			Move:   []string{},
 		}

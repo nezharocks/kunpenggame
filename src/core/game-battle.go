@@ -73,8 +73,9 @@ func (b *GameBattle) newLegs() {
 
 func (b *GameBattle) newLeg(index int) *GameBattleLeg {
 	leg := &GameBattleLeg{
-		Battle: b,
-		Index:  index,
+		Battle:    b,
+		Index:     index,
+		IDPlayers: make(map[int]*Player, 2*b.Config.PlayerNum),
 	}
 
 	// init teams
@@ -91,18 +92,18 @@ func (b *GameBattle) newLeg(index int) *GameBattleLeg {
 	// init teams' players
 	orders := b.Config.PlayerOrders
 	playerNum := b.Config.PlayerNum
-	for t := 0; t < TeamNum; t++ {
-		phIndex := TeamPlaceHolderIndices[index][t]
+	for i := 0; i < TeamNum; i++ {
+		phIndex := TeamPlaceHolderIndices[index][i]
 		holders := b.Map.TeamPlaceHolders[phIndex]
 		holderNum := len(holders)
-		leg.TeamPlayers[t] = make([]*Player, playerNum, playerNum)
-		for i := 0; i < playerNum; i++ {
-			playerIndex := orders[i]
+		leg.TeamPlayers[i] = make([]*Player, playerNum, playerNum)
+		for j := 0; j < playerNum; j++ {
+			playerIndex := orders[j]
 			holder := holders[playerIndex%holderNum]
-			teamID := b.TeamBattles[t].GetTeamID()
-			playerID := b.TeamPlayers[t][playerIndex]
-			player := &Player{Team: teamID, ID: playerID, X: holder.X, Y: holder.Y}
-			leg.TeamPlayers[t][playerIndex] = player
+			teamID := b.TeamBattles[i].GetTeamID()
+			playerID := b.TeamPlayers[i][playerIndex]
+			player := &Player{TeamID: teamID, ID: playerID, X: holder.X, Y: holder.Y, Team: leg.Teams[i]}
+			leg.TeamPlayers[i][playerIndex] = player
 			leg.IDPlayers[playerID] = player
 		}
 	}

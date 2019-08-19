@@ -5,8 +5,10 @@ import "log"
 // Tile is
 type Tile struct {
 	Type      TT
-	Point     int
+	X, Y      int
+	Power     *Power
 	Wormhole  *Wormhole
+	Meteor    *Meteor
 	Tunnel    *Tunnel
 	HasPlayer bool
 	Player    *Player
@@ -52,17 +54,21 @@ const (
 )
 
 // NewTileHolder is
-func NewTileHolder() *Tile {
+func NewTileHolder(x, y int) *Tile {
 	return &Tile{
 		Type: TileHolder,
+		X:    x,
+		Y:    y,
 	}
 }
 
 // NewTilePower is
-func NewTilePower(point int) *Tile {
+func NewTilePower(power *Power) *Tile {
 	return &Tile{
 		Type:  TilePower,
-		Point: point,
+		X:     power.X,
+		Y:     power.Y,
+		Power: power,
 	}
 }
 
@@ -70,14 +76,19 @@ func NewTilePower(point int) *Tile {
 func NewTileWormhole(wormhole *Wormhole) *Tile {
 	return &Tile{
 		Type:     TileWormhole,
+		X:        wormhole.X,
+		Y:        wormhole.Y,
 		Wormhole: wormhole,
 	}
 }
 
 // NewTileMeteor is
-func NewTileMeteor() *Tile {
+func NewTileMeteor(meteor *Meteor) *Tile {
 	return &Tile{
-		Type: TileMeteor,
+		Type:   TileMeteor,
+		X:      meteor.X,
+		Y:      meteor.Y,
+		Meteor: meteor,
 	}
 }
 
@@ -85,6 +96,8 @@ func NewTileMeteor() *Tile {
 func NewTileTunnel(tunnel *Tunnel) *Tile {
 	return &Tile{
 		Type:   TileTunnel,
+		X:      tunnel.X,
+		Y:      tunnel.Y,
 		Tunnel: tunnel,
 	}
 }
@@ -96,26 +109,100 @@ func (t *Tile) BecomeHolder() {
 		return
 	}
 	t.Type = TileHolder
-	t.Point = 0
 }
 
 // AddPlayer is
 func (t *Tile) AddPlayer(player *Player) {
-	// todo
-	if t.HasPlayer {
-		if t.Multiple {
-			t.Players = append(t.Players, player)
-		} else {
-			if t.Players == nil {
-				t.Players = make([]*Player, 0)
-			}
-			t.Players = append(t.Players, t.Player, player)
-			t.Player = nil
-			t.Multiple = true
-		}
-	} else {
+	if !t.HasPlayer {
 		t.Player = player
 		t.HasPlayer = true
+		return
 	}
-	t.Point = t.Point + player.Point
+	if t.Multiple {
+		t.Players = append(t.Players, player)
+		return
+	}
+	t.Players = make([]*Player, 0)
+	t.Players = append(t.Players, t.Player, player)
+	t.Player = nil
+	t.Multiple = true
 }
+
+// RemovePlayer is
+func (t *Tile) RemovePlayer(player *Player) {
+	if !t.HasPlayer {
+		return
+	}
+	if !t.Multiple {
+		t.Player = nil
+		t.HasPlayer = false
+		return
+	}
+
+	pi := -1
+	for i, p := range t.Players {
+		if p == player {
+			pi = i
+			break
+		}
+	}
+	if pi == -1 {
+		return
+	}
+
+	l := len(t.Players)
+	if l == 2 {
+		var left *Player
+		for _, p := range t.Players {
+			if p != player {
+				left = p
+				break
+			}
+		}
+		t.Player = left
+		t.Players = nil
+		t.Multiple = false
+		return
+	}
+	t.Players[l-1], t.Players[pi] = t.Players[pi], t.Players[l-1]
+	t.Players = t.Players[:l-1]
+}
+
+// GetPlayer is
+func (t *Tile) GetPlayer() *Player {
+	if !t.HasPlayer {
+		return nil
+	}
+	if t.Multiple {
+		return t.Players[0]
+	}
+	return t.Player
+}
+
+// // Enter is
+// func (t *Tile) Enter(player *Player, powerForce TeamForce) {
+// 	switch t.Type {
+// 	case TileHolder:
+// 		t.enterHolder(player, powerForce)
+// 	case TilePower:
+// 		t.enterPower(player)
+// 	case TileWormhole:
+// 		t.enterWormhome(player, powerForce)
+// 	case TileMeteor:
+// 		// stay still and do nothing
+// 	case TileTunnel:
+// 		t.enterTunnel(player, powerForce)
+// 	}
+// }
+
+// func (t *Tile) enterPower(player *Player) {
+// }
+
+// func (t *Tile) enterHolder(player *Player, powerForce TeamForce) {
+// }
+
+// func (t *Tile) enterWormhome(player *Player, powerForce TeamForce) {
+// }
+
+// func (t *Tile) enterTunnel(player *Player, powerForce TeamForce) {
+// }

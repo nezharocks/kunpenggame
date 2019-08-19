@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"sort"
 	"time"
@@ -161,22 +160,44 @@ func (l *GameBattleLeg) Round(roundID, teamID int, powerForce TeamForce) *Round 
 
 // Action apply team's movements to the battle and return if the battle should be over
 func (l *GameBattleLeg) Action(action *Action, roundID, teamID int, powerForce TeamForce) bool {
+	if roundID != action.ID {
+		log.Printf("team %v - %dL%3dR, wrong round ID: %v", teamID, l.Index, roundID, action.ID)
+		return false
+	}
+
+	// ensure execute actions by order of ascendence
 	actions := action.Actions
 	sort.Slice(actions, func(i, j int) bool {
 		return actions[i].Player < actions[j].Player
 	})
+
+	// execute actions
 	for _, a := range actions {
-		move := NewMovement(a.Move)
+		move := NewMovementFromAction(a.Move)
 		player, ok := l.IDPlayers[a.Player]
 		if !ok {
 			continue
 		}
-		l.Table.Move(player, powerForce, move)
-		fmt.Println(a.Player)
+		l.Table.Move(player, move, powerForce)
 	}
 
-	// l.TeamPlayers
-	return false
+	// check if a team is over
+	over := true
+	for i := 0; i < TeamNum; i++ {
+		teamOver := true
+		ln := len(l.TeamPlayers[i])
+	loop_players:
+		for j := 0; j < ln; j++ {
+			p := l.TeamPlayers[i][j]
+			if !p.IsDead() {
+				teamOver = false
+				break loop_players
+			}
+		}
+		over = over && teamOver
+	}
+
+	return over
 }
 
 // ActivePlayers is

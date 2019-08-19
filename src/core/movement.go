@@ -1,5 +1,7 @@
 package core
 
+import "log"
+
 // Movement is
 type Movement struct {
 	Dx int
@@ -30,8 +32,8 @@ var (
 	MoveRight = Movement{1, 0}
 )
 
-// NewMovement is
-func NewMovement(m []string) *Movement {
+// NewMovementFromAction is
+func NewMovementFromAction(m []string) *Movement {
 	if len(m) == 0 {
 		return &Stay
 	}
@@ -46,6 +48,24 @@ func NewMovement(m []string) *Movement {
 	case right:
 		return &MoveRight
 	default:
+		log.Printf("wrong action move %q", move)
 		return &Stay
+	}
+}
+
+// NewMovementFromTunnel is
+func NewMovementFromTunnel(dir string) *Movement {
+	switch dir {
+	case dirUp:
+		return &MoveUp
+	case dirDown:
+		return &MoveDown
+	case dirLeft:
+		return &MoveLeft
+	case dirRight:
+		return &MoveRight
+	default:
+		log.Printf("wrong tunnel direction %q", dir)
+		return nil
 	}
 }
