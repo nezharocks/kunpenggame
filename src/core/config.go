@@ -14,7 +14,7 @@ const defaultWidth = 20
 
 const defaultHeight = 20
 
-const debugMessage = false
+const debugMessage = true
 
 const debugLeg = false
 
