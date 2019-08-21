@@ -4,9 +4,10 @@ import "fmt"
 
 // Tunnel is
 type Tunnel struct {
-	Direction string `json:"direction"`
-	X         int    `json:"x"`
-	Y         int    `json:"y"`
+	Direction  string `json:"direction"`
+	X          int    `json:"x"`
+	Y          int    `json:"y"`
+	ExitVertex int    `json:"-"`
 }
 
 const (
@@ -29,9 +30,11 @@ func NewTunnelFromChar(c rune, x, y int) *Tunnel {
 	case '>':
 		dir = dirRight
 	}
-	return &Tunnel{dir, x, y}
+	return &Tunnel{dir, x, y, -1}
 }
 
 func (o Tunnel) String() string {
-	return fmt.Sprintf("tunnel-%v@tile(%v,%v)", o.Direction, o.X, o.Y)
+	entry := fmt.Sprintf("entry(%v,%v)", o.X, o.Y)
+	exit := fmt.Sprintf("exit(%v)", o.ExitVertex)
+	return fmt.Sprintf("tunnel-%v@%v->%v", o.Direction, entry, exit)
 }

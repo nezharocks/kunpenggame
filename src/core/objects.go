@@ -25,14 +25,20 @@ func (o Meteor) String() string {
 
 // Wormhole is
 type Wormhole struct {
-	X    int       `json:"x"`
-	Y    int       `json:"y"`
-	Name string    `json:"name"`
-	Exit *Wormhole `json:"-"`
+	X          int       `json:"x"`
+	Y          int       `json:"y"`
+	Name       string    `json:"name"`
+	Exit       *Wormhole `json:"-"`
+	ExitVertex int       `json:"-"`
 }
 
 func (o Wormhole) String() string {
-	return fmt.Sprintf("wormhole-%v@tile(%v,%v)", o.Name, o.X, o.Y)
+	entry := fmt.Sprintf("entry(%v,%v)", o.X, o.Y)
+	exit := "exit()"
+	if o.Exit != nil {
+		exit = fmt.Sprintf("exit(%v,%v - %v)", o.Exit.X, o.Exit.Y, o.ExitVertex)
+	}
+	return fmt.Sprintf("wormhole-%v@%v->%v", o.Name, entry, exit)
 }
 
 // PlaceHolder is

@@ -60,7 +60,7 @@ loop:
 			xPlaceHolders = append(xPlaceHolders, &PlaceHolder{x, y, nil})
 		default:
 			if (c > 'a' && c < 'z') || (c > 'A' || c < 'Z') {
-				m.Wormholes = append(m.Wormholes, &Wormhole{x, y, string(c), nil})
+				m.Wormholes = append(m.Wormholes, &Wormhole{x, y, string(c), nil, -1})
 			} else {
 				fmt.Printf("char %v is not supported at (%v,%v)", c, x, y)
 			}
@@ -79,15 +79,24 @@ func (m *Map) Init(vision, width, height int) error {
 
 	// pair wormholes
 	wormholeMap := make(map[string]*Wormhole, 10)
-	for _, wormhole := range m.Wormholes {
-		name := strings.ToLower(wormhole.Name)
-		existed, ok := wormholeMap[name]
+	for _, o := range m.Wormholes {
+		name := strings.ToLower(o.Name)
+		other, ok := wormholeMap[name]
 		if !ok {
-			wormholeMap[name] = wormhole
+			wormholeMap[name] = o
 			continue
+		} else {
+			delete(wormholeMap, name)
 		}
-		existed.Exit = wormhole
-		wormhole.Exit = existed
+		o.Exit = other
+		o.ExitVertex = other.Y*width + other.X
+		other.Exit = o
+		other.ExitVertex = o.Y*width + o.X
+	}
+
+	for _, v := range wormholeMap {
+		v.Exit = nil
+		v.ExitVertex = -1
 	}
 
 	// check if the specified width and the parsed width are matched
