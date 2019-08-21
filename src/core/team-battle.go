@@ -57,6 +57,18 @@ func (b *Battle) StartLeg(legStart *LegStart) *Leg {
 		TeamMap: make(map[int]*Team, 2),
 	}
 
+	// m := legStart.Map
+	// fmt.Println(m.Width, m.Height, m.Vision)
+	// for _, o := range legStart.Map.Meteors {
+	// 	fmt.Println(o.String())
+	// }
+	// for _, o := range legStart.Map.Tunnels {
+	// 	fmt.Println(o.String())
+	// }
+	// for _, o := range legStart.Map.Wormholes {
+	// 	fmt.Println(o.String())
+	// }
+
 	// ensure the current (guest) team is the first item in leg.Teams slice
 	otherTeams := make([]*Team, 0)
 	for _, team := range legStart.Teams {
