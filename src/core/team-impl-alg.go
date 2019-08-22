@@ -13,7 +13,7 @@ type TeamAlg struct {
 	RegCh    chan Registration
 	ActionCh chan Action
 	ErrCh    chan error
-	Battle   *Battle
+	Battle   *BattleAlg
 }
 
 // NewTeamAlg creates a TeamAlg instance
@@ -48,7 +48,7 @@ func (t *TeamAlg) SetTeamName(name string) {
 
 func (t *TeamAlg) ensureBattle() {
 	if t.Battle == nil {
-		t.Battle = NewBattle(t.ID, time.Now())
+		t.Battle = NewBattleAlg(t.ID, time.Now())
 		// todo init the game battle's algorithm impl here.
 		log.Printf("team %q's game battle is started", fmt.Sprintf("%v:%v", t.ID, t.Name))
 	}
@@ -68,6 +68,7 @@ func (t *TeamAlg) LegEnd(legEnd *LegEnd) error {
 
 // Round is
 func (t *TeamAlg) Round(round *Round) error {
+	fmt.Println(round.Message().String())
 	err := t.Battle.AddRound(round)
 	if err != nil {
 		log.Println(err)

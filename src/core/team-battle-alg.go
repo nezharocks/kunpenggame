@@ -154,24 +154,34 @@ func (b *BattleAlg) AddRound(round *Round) error {
 func (b *BattleAlg) CalcAction() (*Action, error) {
 	leg := b.Current
 	round := leg.Current.Round
-	action := &Action{
-		ID: round.ID,
-	}
-	myPlayers := make([]*Player, 0, DefaultPlayerNum)
-	for _, p := range round.Players {
-		if p.TeamID == b.TeamID && p.Sleep == 0 {
-			myPlayers = append(myPlayers, p)
-		}
-	}
-	l := len(myPlayers)
-	action.Actions = make([]*PlayerAction, l, l)
-	for i, p := range myPlayers {
-		action.Actions[i] = &PlayerAction{
-			Team:   p.TeamID,
-			Player: p.ID,
-			Move:   b.randomMove(),
-		}
+	hunting := leg.Teams[0].Force == round.Mode
+	if hunting {
+		fmt.Println("hunt round", round.ID)
+	} else {
+		fmt.Println("escape round", round.ID)
 	}
 
+	w := leg.Map.Width
+	for _, p := range round.Powers {
+		p.V = p.Y*w + p.X
+	}
+	for _, p := range round.Players {
+		p.V = p.Y*w + p.X
+	}
+
+	ourPlayers := make([]*Player, 0, DefaultPlayerNum)
+	rivalPlayers := make([]*Player, 0, DefaultPlayerNum)
+	for _, p := range round.Players {
+		if p.TeamID == b.TeamID {
+			ourPlayers = append(ourPlayers, p)
+		} else {
+			rivalPlayers = append(rivalPlayers, p)
+		}
+		// todo check it out
+		// if p.TeamID == b.TeamID && p.Sleep == 0 {
+		// 	ourPlayers = append(ourPlayers, p)
+		// }
+	}
+	action := leg.Guide.Calc(round.ID, hunting, ourPlayers, rivalPlayers, round.Powers)
 	return action, nil
 }

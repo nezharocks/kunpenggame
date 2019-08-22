@@ -13,10 +13,12 @@ const ExitTrap = -1
 const InfDist = 10000
 
 const (
-	vHolder   = 0
-	vMeteor   = 1
-	vTunnel   = 2
-	vWormhole = 3
+	vHolder     = 0
+	vMeteor     = 1
+	vTunnel     = 2
+	vWormhole   = 3
+	vBirthPlace = 4
+	vPower      = 5
 )
 
 // init tiles with type and Object index
@@ -46,6 +48,20 @@ func initTnO(m *Map) ([]int, []int) {
 		O[v] = i
 		o.V = v
 	}
+
+	for i, o := range m.Powers {
+		v := o.Y*w + o.X
+		T[v] = vPower
+		O[v] = i
+		o.V = v
+	}
+
+	for i, o := range m.PlaceHolders {
+		v := o.Y*w + o.X
+		T[v] = vBirthPlace
+		O[v] = i
+		o.V = v
+	}
 	return T, O
 }
 
@@ -70,7 +86,7 @@ func calcTunnelExit(m *Map, T []int, O []int, o *Tunnel) int {
 	}
 	t := T[ev]
 	switch t {
-	case vHolder:
+	case vHolder, vBirthPlace, vPower:
 		return ev
 	case vMeteor:
 		return ExitTrap
@@ -116,6 +132,24 @@ func updateWormholeExits(m *Map) {
 	}
 }
 
+func getNeighbors(i, w, h int) []int {
+	x, y := i%w, i/w
+	nbs := make([]int, 0, 4)
+	if x-1 >= 0 {
+		nbs = append(nbs, y*w+x-1)
+	}
+	if x+1 < w {
+		nbs = append(nbs, y*w+x+1)
+	}
+	if y-1 >= 0 {
+		nbs = append(nbs, y*w+x-w)
+	}
+	if y+1 < h {
+		nbs = append(nbs, y*w+x+w)
+	}
+	return nbs
+}
+
 func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 	w, h := m.Width, m.Height
 	n := w * h
@@ -125,30 +159,16 @@ func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 		if t == vMeteor {
 			continue
 		}
-		x, y := i%w, i/w
-		// get neighbors
-		nbs := make([]int, 0)
-		if x-1 >= 0 {
-			nbs = append(nbs, y*w+x-1)
-		}
-		if x+1 < w {
-			nbs = append(nbs, y*w+x+1)
-		}
-		if y-1 >= 0 {
-			nbs = append(nbs, y*w+x-w)
-		}
-		if y+1 < h {
-			nbs = append(nbs, y*w+x+w)
-		}
+		nbs := getNeighbors(i, w, h)
 
 		// calculate edges from i to its neighbors
 		switch t {
-		case vHolder:
+		case vHolder, vBirthPlace, vPower:
 			// handle its neighbors
 			for _, nb := range nbs {
 				nbt := T[nb] // neighbor type
 				switch nbt {
-				case vHolder:
+				case vHolder, vBirthPlace, vPower:
 					G[i][nb] = 1
 				case vMeteor:
 					// no inbound edges, let it be
@@ -163,7 +183,7 @@ func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 			for _, nb := range nbs {
 				nbt := T[nb] // neighbor type
 				switch nbt {
-				case vHolder:
+				case vHolder, vBirthPlace, vPower:
 					G[i][nb] = 1
 				case vMeteor:
 					// no inbound edges, let it be

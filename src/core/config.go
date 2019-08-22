@@ -6,7 +6,7 @@ const NetworkMode = false
 // ServerTimeout is the timeout which client will wait to exit until server responses
 const ServerTimeout = 1
 
-const defaultMapData = Map3
+const defaultMapData = Map1
 
 const defaultVision = 4
 

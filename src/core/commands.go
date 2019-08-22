@@ -80,7 +80,6 @@ type PlayerAction struct {
 	Team   int      `json:"team"`
 	Player int      `json:"player_id"`
 	Move   []string `json:"move"`
-	// Movement *Movement `json:"-"`
 }
 
 // LegStartTeam is

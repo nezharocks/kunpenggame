@@ -73,7 +73,7 @@ func Test_createGraph(t *testing.T) {
 		{
 			name: "createGraph - print map 1",
 			args: args{
-				m: makeMockMap(Map3),
+				m: makeMockMap(Map1),
 			},
 			want:  nil,
 			want1: nil,

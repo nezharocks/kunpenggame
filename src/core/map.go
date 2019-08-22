@@ -16,6 +16,7 @@ type Map struct {
 	Wormholes        []*Wormhole             `json:"wormhole"`
 	Powers           []*Power                `json:"-"`
 	TeamPlaceHolders [TeamNum][]*PlaceHolder `json:"-"`
+	PlaceHolders     []*PlaceHolder          `json:"-"`
 }
 
 // NewMapFromString is
@@ -55,9 +56,9 @@ loop:
 		case '1', '2', '3', '4', '5':
 			m.Powers = append(m.Powers, &Power{x, y, int(c - 48), -1})
 		case 'O':
-			oPlaceHolders = append(oPlaceHolders, &PlaceHolder{x, y, nil})
+			oPlaceHolders = append(oPlaceHolders, &PlaceHolder{x, y, "O", nil, -1})
 		case 'X':
-			xPlaceHolders = append(xPlaceHolders, &PlaceHolder{x, y, nil})
+			xPlaceHolders = append(xPlaceHolders, &PlaceHolder{x, y, "X", nil, -1})
 		default:
 			if (c > 'a' && c < 'z') || (c > 'A' || c < 'Z') {
 				m.Wormholes = append(m.Wormholes, &Wormhole{x, y, string(c), nil, -1, -1})
@@ -70,6 +71,7 @@ loop:
 	m.Height = y + 1
 	m.TeamPlaceHolders[0] = oPlaceHolders
 	m.TeamPlaceHolders[1] = xPlaceHolders
+	m.PlaceHolders = append(oPlaceHolders, xPlaceHolders...)
 	return m, nil
 }
 
@@ -151,22 +153,4 @@ func (m Map) GetVision(x, y int) *Vision {
 		y2 = rby
 	}
 	return &Vision{X1: x1, Y1: y1, X2: x2, Y2: y2}
-}
-
-// Vision is
-type Vision struct {
-	X1, Y1 int // the left and top point
-	X2, Y2 int // the left and top point
-	// Width, Height int // include the start point pixel
-}
-
-// InVision is
-func (v Vision) InVision(x, y int) bool {
-	if x < v.X1 || x > v.X2 {
-		return false
-	}
-	if y < v.Y1 || y > v.Y2 {
-		return false
-	}
-	return true
 }

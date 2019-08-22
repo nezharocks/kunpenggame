@@ -55,14 +55,14 @@ func printMap(m *Map, T []int, O []int, w, h int) {
 	// column header
 	fmt.Print("    ")
 	for i := 0; i < w; i++ {
-		fmt.Printf("%-2d  ", i)
+		fmt.Printf("%-2d ", i)
 	}
 	fmt.Println()
 
 	// column line
 	fmt.Print("  |-")
 	for i := 0; i < w; i++ {
-		fmt.Printf("----")
+		fmt.Printf("---")
 	}
 	fmt.Println()
 
@@ -73,15 +73,21 @@ func printMap(m *Map, T []int, O []int, w, h int) {
 			t := T[i]
 			switch t {
 			case vHolder:
-				fmt.Print(".   ")
+				fmt.Print(".  ")
+			case vBirthPlace:
+				o := m.PlaceHolders[O[i]]
+				fmt.Printf("%v  ", o.Name)
+			case vPower:
+				o := m.Powers[O[i]]
+				fmt.Printf("%v  ", o.Point)
 			case vMeteor:
-				fmt.Print("#   ")
+				fmt.Print("#  ")
 			case vWormhole:
 				o := m.Wormholes[O[i]]
-				fmt.Printf("%v   ", o.Name)
+				fmt.Printf("%v  ", o.Name)
 			case vTunnel:
 				o := m.Tunnels[O[i]]
-				fmt.Printf("%v   ", o.Char())
+				fmt.Printf("%v  ", o.Char())
 			}
 		}
 		fmt.Println()

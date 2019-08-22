@@ -48,7 +48,9 @@ func (o Wormhole) String() string {
 type PlaceHolder struct {
 	X      int     `json:"x"`
 	Y      int     `json:"y"`
+	Name   string  `json:"-"`
 	Player *Player `json:"-"`
+	V      int     `json:"-"`
 }
 
 // Team is

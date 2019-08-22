@@ -29,7 +29,7 @@ func main() {
 		name = "daolaji"
 	}
 
-	team := core.NewTeamImpl(name)
+	team := core.NewTeamAlg(name)
 	team.SetTeamID(id)
 	gameAgent := core.NewGameAgentImpl(id, name, ip, port)
 	teamService := core.NewTeamService(team, gameAgent)

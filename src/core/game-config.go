@@ -17,7 +17,7 @@ const (
 	DefaultLegModeNum = 2
 
 	// DefaultRoundNum is
-	DefaultRoundNum = 300
+	DefaultRoundNum = 2
 
 	// DefaultPlayerNum is
 	DefaultPlayerNum = 4
