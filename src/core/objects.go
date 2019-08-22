@@ -7,6 +7,7 @@ type Power struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
 	Point int `json:"point"`
+	V     int `json:"-"`
 }
 
 func (o Power) String() string {
@@ -17,6 +18,7 @@ func (o Power) String() string {
 type Meteor struct {
 	X int `json:"x"`
 	Y int `json:"y"`
+	V int `json:"-"`
 }
 
 func (o Meteor) String() string {
@@ -30,6 +32,7 @@ type Wormhole struct {
 	Name       string    `json:"name"`
 	Exit       *Wormhole `json:"-"`
 	ExitVertex int       `json:"-"`
+	V          int       `json:"-"`
 }
 
 func (o Wormhole) String() string {
@@ -114,6 +117,7 @@ type Player struct {
 	Y      int   `json:"y"`
 	Dead   bool  `json:"-"`
 	Team   *Team `json:"-"`
+	V      int   `json:"-"`
 }
 
 // String is

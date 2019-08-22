@@ -8,6 +8,7 @@ type Tunnel struct {
 	X          int    `json:"x"`
 	Y          int    `json:"y"`
 	ExitVertex int    `json:"-"`
+	V          int    `json:"-"`
 }
 
 const (
@@ -30,11 +31,28 @@ func NewTunnelFromChar(c rune, x, y int) *Tunnel {
 	case '>':
 		dir = dirRight
 	}
-	return &Tunnel{dir, x, y, -1}
+	return &Tunnel{dir, x, y, -1, -1}
 }
 
 func (o Tunnel) String() string {
 	entry := fmt.Sprintf("entry(%v,%v)", o.X, o.Y)
 	exit := fmt.Sprintf("exit(%v)", o.ExitVertex)
 	return fmt.Sprintf("tunnel-%v@%v->%v", o.Direction, entry, exit)
+}
+
+// Char returns a arrow string
+func (o Tunnel) Char() string {
+	switch o.Direction {
+	case dirUp:
+		return "^"
+	case dirDown:
+		return "v"
+	case dirLeft:
+		return "<"
+	case dirRight:
+		return ">"
+	default:
+		return "?"
+	}
+
 }

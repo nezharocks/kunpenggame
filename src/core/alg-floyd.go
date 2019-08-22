@@ -2,49 +2,49 @@ package core
 
 import (
 	"log"
+	"strings"
 )
-
-// V is vertex type which store vertex information
-// as of now, V store the distance of a edge
-type V uint16
 
 // ExitTrap means a tunnel has no exit. because the exit is a meteor,
 // or out of the borders of the map.
 const ExitTrap = -1
 
-// InfinitDist means there is no path between vi and vj
-const InfinitDist = V(10000)
+// InfDist means there is no path between vi and vj
+const InfDist = 10000
 
 const (
-	vHolder   = byte(0)
-	vMeteor   = byte(1)
-	vTunnel   = byte(2)
-	vWormhole = byte(3)
+	vHolder   = 0
+	vMeteor   = 1
+	vTunnel   = 2
+	vWormhole = 3
 )
 
-// init tiles with type and index
-func initTileObjects(m *Map) ([]byte, []int) {
+// init tiles with type and Object index
+func initTnO(m *Map) ([]int, []int) {
 	w, h := m.Width, m.Height
 	n := w * h
-	T := make([]byte, n, n) // by default, all tile are holders
-	O := make([]int, n, n)  // by default, objects index in object list in map
+	T := make([]int, n, n) // by default, all tile are holders
+	O := make([]int, n, n) // by default, objects index in object list in map
 
 	for i, o := range m.Meteors {
 		v := o.Y*w + o.X
 		T[v] = vMeteor
 		O[v] = i
+		o.V = v
 	}
 
 	for i, o := range m.Tunnels {
 		v := o.Y*w + o.X
 		T[v] = vTunnel
 		O[v] = i
+		o.V = v
 	}
 
 	for i, o := range m.Wormholes {
 		v := o.Y*w + o.X
 		T[v] = vWormhole
 		O[v] = i
+		o.V = v
 	}
 	return T, O
 }
@@ -60,7 +60,7 @@ func moveVertex(x, y int, w, h int, move *Movement) int {
 	return my*w + mx
 }
 
-func calcTunnelExit(m *Map, T []byte, O []int, o *Tunnel) int {
+func calcTunnelExit(m *Map, T []int, O []int, o *Tunnel) int {
 	w, h := m.Width, m.Height
 	v := o.Y*w + o.X
 	move := NewMovementFromTunnel(o.Direction)
@@ -83,40 +83,68 @@ func calcTunnelExit(m *Map, T []byte, O []int, o *Tunnel) int {
 	}
 }
 
-func updateTunnelExits(m *Map, T []byte, O []int) {
+func updateTunnelExits(m *Map, T []int, O []int) {
 	for _, o := range m.Tunnels {
 		o.ExitVertex = calcTunnelExit(m, T, O, o)
 	}
 }
 
-func updateGraphWeights(m *Map, T []byte, O []int, G [][]V) {
+func updateWormholeExits(m *Map) {
+	w := m.Width
+	cache := make(map[string]*Wormhole, 20)
+	for _, o := range m.Wormholes {
+		// hit the pair
+		name := strings.ToLower(o.Name)
+		paired, ok := cache[name]
+		if !ok {
+			cache[name] = o
+			continue
+		}
+		delete(cache, name)
+
+		// couple the pair
+		o.Exit = paired
+		o.ExitVertex = paired.Y*w + paired.X
+		paired.Exit = o
+		paired.ExitVertex = o.Y*w + o.X
+	}
+
+	// update exceptional wormholes which are not paired
+	for _, v := range cache {
+		v.Exit = nil
+		v.ExitVertex = -1
+	}
+}
+
+func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 	w, h := m.Width, m.Height
 	n := w * h
 	for i := 0; i < n; i++ {
 		t := T[i]
 		// meteor and tunnel have no outbound edges
-		if t == vMeteor || t == vTunnel {
+		if t == vMeteor {
 			continue
 		}
 		x, y := i%w, i/w
 		// get neighbors
-		nbs := make([]V, 0)
+		nbs := make([]int, 0)
 		if x-1 >= 0 {
-			nbs = append(nbs, V(y*w+x-1))
+			nbs = append(nbs, y*w+x-1)
 		}
 		if x+1 < w {
-			nbs = append(nbs, V(y*w+x+1))
+			nbs = append(nbs, y*w+x+1)
 		}
 		if y-1 >= 0 {
-			nbs = append(nbs, V(y*w+x-w))
+			nbs = append(nbs, y*w+x-w)
 		}
 		if y+1 < h {
-			nbs = append(nbs, V(y*w+x+w))
+			nbs = append(nbs, y*w+x+w)
 		}
 
 		// calculate edges from i to its neighbors
 		switch t {
 		case vHolder:
+			// handle its neighbors
 			for _, nb := range nbs {
 				nbt := T[nb] // neighbor type
 				switch nbt {
@@ -125,33 +153,27 @@ func updateGraphWeights(m *Map, T []byte, O []int, G [][]V) {
 				case vMeteor:
 					// no inbound edges, let it be
 				case vWormhole:
-					G[i][nb] = 1 // todo
-					// handle the edge with its exit
-					o := m.Wormholes[O[nb]]
-					exit := o.ExitVertex
-					if exit == ExitTrap {
-						log.Printf("%v has no exit at all, map data is illegal", o.String())
-					} else {
-						G[i][exit] = 1
-						// todo: record the tunnel pair
-					}
+					G[i][nb] = 1
 				case vTunnel:
-					G[i][nb] = 1 // todo
-					// handle the edge with its exit
-					o := m.Tunnels[O[nb]]
-					exit := o.ExitVertex
-					if exit == ExitTrap {
-						log.Printf("%v has no exit at all, map data has a trap from point %v", o.String(), i)
-					} else if i == exit {
-						log.Printf("%v has an exit which is back to point %v. bypass the edge", o.String(), i)
-					} else {
-						G[i][exit] = 1
-						// todo: record the tunnel pair
-					}
+					G[i][nb] = 1
 				}
 			}
 		case vWormhole:
-			// handle the edge from current wormhole to its exit
+			// handle its neighbors
+			for _, nb := range nbs {
+				nbt := T[nb] // neighbor type
+				switch nbt {
+				case vHolder:
+					G[i][nb] = 1
+				case vMeteor:
+					// no inbound edges, let it be
+				case vWormhole:
+					G[i][nb] = 1
+				case vTunnel:
+					G[i][nb] = 1
+				}
+			}
+			// handle its exit
 			o := m.Wormholes[O[i]]
 			exit := o.ExitVertex
 			if exit == ExitTrap {
@@ -159,62 +181,60 @@ func updateGraphWeights(m *Map, T []byte, O []int, G [][]V) {
 			} else {
 				G[i][exit] = 0
 				G[exit][i] = 0
+				// x1, y1 := i%w, i/w
+				// x2, y2 := exit%w, exit/w
+				// fmt.Printf("wormhole %v,%v --> %v,%v\n", x1, y1, x2, y2)
 			}
-			// handle neighbors' edges
-			for _, nb := range nbs {
-				nbt := T[nb] // neighbor type
-				switch nbt {
-				case vHolder:
-					G[i][nb] = 1
-				case vMeteor:
-					// no inbound edges, let it be
-				case vWormhole:
-					G[i][nb] = 1
-					// handle the edge with its exit
-					o := m.Wormholes[O[nb]]
-					exit := o.ExitVertex
-					if exit == ExitTrap {
-						log.Printf("%v has no exit at all, map data is illegal", o.String())
-					} else if i == exit {
-						log.Printf("%v has an exit which is back to point %v. the wormhole pair are neighbors, bypass the edge", o.String(), i)
-					} else {
-						G[i][exit] = 1
-						// todo: record the tunnel pair
-					}
-				case vTunnel:
-					G[i][nb] = 1 // todo
-					// handle the edge with its exit
-					o := m.Tunnels[O[nb]]
-					exit := o.ExitVertex
-					if exit == ExitTrap {
-						log.Printf("%v has no exit at all, map data has a trap from point %v", o.String(), i)
-					} else if i == exit {
-						log.Printf("%v has an exit which is back to point %v. bypass the edge", o.String(), i)
-					} else {
-						G[i][exit] = 1
-						// todo: record the tunnel pair
-					}
-				}
+
+		case vTunnel:
+			// handle its exit
+			o := m.Tunnels[O[i]]
+			exit := o.ExitVertex
+			if exit == ExitTrap {
+				log.Printf("%v has no exit at all, map data is illegal", o.String())
+			} else {
+				G[i][exit] = 0
+				// x1, y1 := i%w, i/w
+				// x2, y2 := exit%w, exit/w
+				// fmt.Printf("tunnel %v,%v --> %v,%v\n", x1, y1, x2, y2)
 			}
-		}
-	}
+		} // end switch
+	} // end for
 }
 
-func createGraph(m *Map) ([][]V, []byte, []int) {
+func updateGraph(m *Map, T []int, O []int, D [][]int) {
 	w, h := m.Width, m.Height
 	n := w * h
-	T, O := initTileObjects(m)
 
 	// init a graph
-	G := make([][]V, n, n)
 	for i := 0; i < n; i++ {
-		G[i] = make([]V, n, n)
+	to:
+		for j := 0; j < n; j++ {
+			if i == j {
+				D[i][j] = 0
+				continue to
+			}
+			D[i][j] = InfDist
+		}
+	}
+	updateGraphWeights(m, T, O, D)
+}
+
+func createGraph(m *Map) ([][]int, []int, []int) {
+	w, h := m.Width, m.Height
+	n := w * h
+	T, O := initTnO(m)
+
+	// init a graph
+	G := make([][]int, n, n)
+	for i := 0; i < n; i++ {
+		G[i] = make([]int, n, n)
 	to:
 		for j := 0; j < n; j++ {
 			if i == j {
 				continue to
 			}
-			G[i][j] = InfinitDist
+			G[i][j] = InfDist
 		}
 	}
 	updateTunnelExits(m, T, O)
@@ -222,19 +242,20 @@ func createGraph(m *Map) ([][]V, []byte, []int) {
 	return G, T, O
 }
 
-func createMatrix(n int) [][]V {
-	M := make([][]V, n, n)
+func createMatrix(n int) [][]int {
+	M := make([][]int, n, n)
 	for i := 0; i < n; i++ {
-		M[i] = make([]V, n, n)
+		M[i] = make([]int, n, n)
 	}
 	return M
 }
-func floyd(G [][]V, P [][]V) {
+
+func floyd(G [][]int, P [][]int) {
 	n := len(G)
 	// init path matrix
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
-			P[i][j] = V(j)
+			P[i][j] = j
 		}
 	}
 
@@ -250,15 +271,16 @@ func floyd(G [][]V, P [][]V) {
 		}
 	}
 }
-func floydPath(P [][]V, i, j V) []V {
-	path := make([]V, 10)
+
+func floydPath(P [][]int, i, j int) []int {
+	path := make([]int, 0)
 	k := i
 	for {
+		k = P[k][j]
 		path = append(path, k)
 		if k == j {
 			break
 		}
-		k = P[k][j]
 	}
 	return path
 }

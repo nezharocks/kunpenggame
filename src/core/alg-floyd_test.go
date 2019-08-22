@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 )
 
 func makeMockMap(mapData string) *Map {
@@ -21,7 +22,7 @@ func makeMockMap(mapData string) *Map {
 	return m
 }
 
-func Test_initTileObjects(t *testing.T) {
+func Test_initTnO(t *testing.T) {
 	type args struct {
 		m *Map
 	}
@@ -32,7 +33,7 @@ func Test_initTileObjects(t *testing.T) {
 		want1 []int
 	}{
 		{
-			name: "initTileObjects - print map 1",
+			name: "initTnO - print map 1",
 			args: args{
 				m: makeMockMap(Map3),
 			},
@@ -42,17 +43,17 @@ func Test_initTileObjects(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			T, O := initTileObjects(tt.args.m)
+			T, O := initTnO(tt.args.m)
 			m := tt.args.m
-			printTypes(T, m.Width, m.Height)
-			printObjectIndexes(O, m.Width, m.Height)
+			printMap(m, T, O, m.Width, m.Height)
+			// printObjectIndexes(O, m.Width, m.Height)
 			updateTunnelExits(m, T, O)
 			printMapObjects(m)
 			// if !reflect.DeepEqual(T, tt.want) {
-			// 	t.Errorf("initTileObjects() T = %v, want %v", T, tt.want)
+			// 	t.Errorf("initTnO() T = %v, want %v", T, tt.want)
 			// }
 			// if !reflect.DeepEqual(O, tt.want1) {
-			// 	t.Errorf("initTileObjects() O = %v, want %v", O, tt.want1)
+			// 	t.Errorf("initTnO() O = %v, want %v", O, tt.want1)
 			// }
 		})
 	}
@@ -65,14 +66,14 @@ func Test_createGraph(t *testing.T) {
 	tests := []struct {
 		name  string
 		args  args
-		want  [][]V
+		want  [][]int
 		want1 []byte
 		want2 []int
 	}{
 		{
 			name: "createGraph - print map 1",
 			args: args{
-				m: makeMockMap(Map1),
+				m: makeMockMap(Map3),
 			},
 			want:  nil,
 			want1: nil,
@@ -82,15 +83,22 @@ func Test_createGraph(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.args.m
-			G, T, _ := createGraph(m)
+			start := time.Now()
+			G, T, O := createGraph(m)
 			//printGraph(G)
-			printTypes(T, m.Width, m.Height)
-
 			n := m.Width * m.Height
 			P := createMatrix(n)
 			floyd(G, P)
-			path := floydPath(P, 60, 86)
-			fmt.Printf("%v\n", path)
+			fmt.Printf("%v\n", time.Since(start))
+			printMap(m, T, O, m.Width, m.Height)
+			printPath(G, P, 0, 0)
+			printPath(G, P, 360, 360)
+			printPath(G, P, 0, 360)
+			printPath(G, P, 60, 86)
+			printPath(G, P, 0, 4)
+			printPath(G, P, 0, 385)
+			printPath(G, P, 14, 246)
+			printPath(G, P, 250, 150)
 
 			// if !reflect.DeepEqual(G, tt.want) {
 			// 	t.Errorf("createGraph() G = %v, want %v", G, tt.want)
@@ -103,4 +111,8 @@ func Test_createGraph(t *testing.T) {
 			// }
 		})
 	}
+}
+func printPath(G [][]int, P [][]int, i, j int) {
+	path := floydPath(P, i, j)
+	fmt.Printf("%v: %v\n", G[i][j], path)
 }

@@ -46,8 +46,8 @@ func mapExample() *Map {
 		Height: 15,
 		Vision: 3,
 		Meteors: []*Meteor{
-			&Meteor{1, 1},
-			&Meteor{1, 4},
+			&Meteor{1, 1, -1},
+			&Meteor{1, 4, -1},
 		},
 		Tunnels: []*Tunnel{
 			&Tunnel{

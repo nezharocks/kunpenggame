@@ -48,19 +48,19 @@ loop:
 			y++
 			continue loop
 		case '#':
-			m.Meteors = append(m.Meteors, &Meteor{x, y})
+			m.Meteors = append(m.Meteors, &Meteor{x, y, -1})
 		case '^', 'v', '<', '>':
 			tunnel := NewTunnelFromChar(c, x, y)
 			m.Tunnels = append(m.Tunnels, tunnel)
 		case '1', '2', '3', '4', '5':
-			m.Powers = append(m.Powers, &Power{x, y, int(c - 48)})
+			m.Powers = append(m.Powers, &Power{x, y, int(c - 48), -1})
 		case 'O':
 			oPlaceHolders = append(oPlaceHolders, &PlaceHolder{x, y, nil})
 		case 'X':
 			xPlaceHolders = append(xPlaceHolders, &PlaceHolder{x, y, nil})
 		default:
 			if (c > 'a' && c < 'z') || (c > 'A' || c < 'Z') {
-				m.Wormholes = append(m.Wormholes, &Wormhole{x, y, string(c), nil, -1})
+				m.Wormholes = append(m.Wormholes, &Wormhole{x, y, string(c), nil, -1, -1})
 			} else {
 				fmt.Printf("char %v is not supported at (%v,%v)", c, x, y)
 			}

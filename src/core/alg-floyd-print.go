@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-func printGraph(G [][]V) {
+func printGraph(G [][]int) {
 	w := len(G)
 	// for i := 0; i < w; i++ {
 	// 	fmt.Printf("%-3d ", i)
@@ -51,7 +51,7 @@ func printObjectIndexes(O []int, w, h int) {
 	fmt.Println()
 }
 
-func printTypes(T []byte, w, h int) {
+func printMap(m *Map, T []int, O []int, w, h int) {
 	// column header
 	fmt.Print("    ")
 	for i := 0; i < w; i++ {
@@ -77,9 +77,11 @@ func printTypes(T []byte, w, h int) {
 			case vMeteor:
 				fmt.Print("#   ")
 			case vWormhole:
-				fmt.Print("W   ")
+				o := m.Wormholes[O[i]]
+				fmt.Printf("%v   ", o.Name)
 			case vTunnel:
-				fmt.Print("T   ")
+				o := m.Tunnels[O[i]]
+				fmt.Printf("%v   ", o.Char())
 			}
 		}
 		fmt.Println()
