@@ -201,9 +201,6 @@ func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 			} else {
 				G[i][exit] = 0
 				G[exit][i] = 0
-				// x1, y1 := i%w, i/w
-				// x2, y2 := exit%w, exit/w
-				// fmt.Printf("wormhole %v,%v --> %v,%v\n", x1, y1, x2, y2)
 			}
 
 		case vTunnel:
@@ -214,9 +211,6 @@ func updateGraphWeights(m *Map, T []int, O []int, G [][]int) {
 				log.Printf("%v has no exit at all, map data is illegal", o.String())
 			} else {
 				G[i][exit] = 0
-				// x1, y1 := i%w, i/w
-				// x2, y2 := exit%w, exit/w
-				// fmt.Printf("tunnel %v,%v --> %v,%v\n", x1, y1, x2, y2)
 			}
 		} // end switch
 	} // end for

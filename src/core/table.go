@@ -207,8 +207,6 @@ func (t *Table) enterWormhole(player *Player, tile *Tile, powerForce TeamForce) 
 }
 
 func (t *Table) enterTunnel(player *Player, tile *Tile, powerForce TeamForce) {
-	log.Println(tile.String())
-
 	if tile.Tunnel == nil {
 		log.Println("state illegal - tile has no tunnel")
 		log.Printf("%v skip moving to the empty tunnel", player.String())

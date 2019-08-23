@@ -264,22 +264,6 @@ func (g *Guide) Calc(roundID int, hunting bool, ourPlayers []*Player, rivalPlaye
 		ID:      roundID,
 		Actions: actions,
 	}
-	// powerTargets := g.calcPowerTargets(ourPlayers, powers)
-	// selected, idle := g.selectPowerTargets(ourPlayers, powerTargets)
-	// var selectPlayerTargets []*Target
-	// if len(idle) > 0 && len(rivalPlayers) > 0 {
-	// 	playerTargets := g.calcPlayerTargets(idle, rivalPlayers)
-	// 	selectPlayerTargets = g.selectPlayerTargets(idle, playerTargets)
-	// 	selected = append(selected, selectPlayerTargets...)
-	// } else if len(idle) > 0 && len(rivalPlayers) == 0 {
-	// 	// todo: calculate and select vision targets
-	// }
-	// action := &Action{
-	// 	ID: roundID,
-	// }
-	// action.Actions = g.generateActions(selected)
-	// fmt.Println(action.Message().String())
-	// return action
 }
 
 func (g *Guide) calcPowerTargets(players []*Player, powers []*Power) []*Target {
