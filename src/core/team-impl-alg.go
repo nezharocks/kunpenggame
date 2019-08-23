@@ -68,7 +68,6 @@ func (t *TeamAlg) LegEnd(legEnd *LegEnd) error {
 
 // Round is
 func (t *TeamAlg) Round(round *Round) error {
-	fmt.Println(round.Message().String())
 	err := t.Battle.AddRound(round)
 	if err != nil {
 		log.Println(err)

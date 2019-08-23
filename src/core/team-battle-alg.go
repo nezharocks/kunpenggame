@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -16,6 +17,7 @@ type BattleAlg struct {
 
 // NewBattleAlg is
 func NewBattleAlg(teamID int, battleTime time.Time) *BattleAlg {
+	rand.Seed(time.Now().Unix())
 	return &BattleAlg{
 		TeamID: teamID,
 		Time:   battleTime,
@@ -155,11 +157,11 @@ func (b *BattleAlg) CalcAction() (*Action, error) {
 	leg := b.Current
 	round := leg.Current.Round
 	hunting := leg.Teams[0].Force == round.Mode
-	if hunting {
-		fmt.Println("hunt round", round.ID)
-	} else {
-		fmt.Println("escape round", round.ID)
-	}
+	// if hunting {
+	// 	fmt.Println("hunt round", round.ID)
+	// } else {
+	// 	fmt.Println("escape round", round.ID)
+	// }
 
 	w := leg.Map.Width
 	for _, p := range round.Powers {

@@ -52,14 +52,119 @@ func (v Vision) InVision(x, y int) bool {
 
 // MapArea is
 type MapArea struct {
-	X1, Y1 int // left top pixel
-	X2, Y2 int // right bottom pixel
-	X, Y   int // center pixel
-	Count  int
+	Index   int
+	X1, Y1  int // left top pixel
+	X2, Y2  int // right bottom pixel
+	X, Y, V int // center pixel
+	Count   int
+	Points  []int
 }
 
 func (a *MapArea) String() string {
-	return fmt.Sprintf("%-2d,%-2d %-2d,%-2d %-2d,%-2d %v", a.X1, a.Y1, a.X2, a.Y2, a.X, a.Y, a.Count)
+	return fmt.Sprintf("%v\t\t%-2d,%-2d %-2d,%-2d %-2d,%-2d %v %v", a.Index, a.X1, a.Y1, a.X2, a.Y2, a.X, a.Y, a.V, a.Count)
+}
+
+// MapPoint is
+type MapPoint struct {
+	X, Y int
+	W, H int
+}
+
+// NewMapPoint is
+func NewMapPoint(x, y, w, h int) *MapPoint {
+	return &MapPoint{x, y, w, h}
+}
+
+// Vertex returns the vertex index in the map tree
+func (p *MapPoint) Vertex() int {
+	return p.Y*p.W + p.X
+}
+
+// Up moves the point up
+func (p *MapPoint) Up() *MapPoint {
+	if p.Y-1 >= 0 {
+		p.Y--
+	}
+	return p
+}
+
+// Down moves the point down
+func (p *MapPoint) Down() *MapPoint {
+	if p.Y+1 < p.H {
+		p.Y++
+	}
+	return p
+}
+
+// Left moves the point left
+func (p *MapPoint) Left() *MapPoint {
+	if p.X-1 >= 0 {
+		p.X--
+	}
+	return p
+}
+
+// Right moves the point Right
+func (p *MapPoint) Right() *MapPoint {
+	if p.X+1 < p.W {
+		p.X++
+	}
+	return p
+}
+
+// UpdatePoints is
+func (a *MapArea) UpdatePoints(w, h int) {
+	p := NewMapPoint(a.X, a.Y, w, h)
+	points := make([]int, 0, 4)
+	switch a.Index {
+	case 0:
+		points = append(points, p.Vertex())
+		points = append(points, p.Left().Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Right().Vertex())
+	case 1:
+		points = append(points, p.Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Left().Vertex())
+		points = append(points, p.Right().Right().Vertex())
+	case 2:
+		points = append(points, p.Vertex())
+		points = append(points, p.Right().Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Left().Vertex())
+	case 3:
+		points = append(points, p.Vertex())
+		points = append(points, p.Left().Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Down().Down().Vertex())
+	case 4:
+		points = append(points, p.Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Down().Down().Vertex())
+		points = append(points, p.Up().Left().Vertex())
+		points = append(points, p.Right().Right().Vertex())
+	case 5:
+		points = append(points, p.Vertex())
+		points = append(points, p.Right().Vertex())
+		points = append(points, p.Up().Vertex())
+		points = append(points, p.Down().Down().Vertex())
+	case 6:
+		points = append(points, p.Vertex())
+		points = append(points, p.Left().Vertex())
+		points = append(points, p.Down().Vertex())
+		points = append(points, p.Right().Vertex())
+	case 7:
+		points = append(points, p.Vertex())
+		points = append(points, p.Down().Vertex())
+		points = append(points, p.Left().Vertex())
+		points = append(points, p.Right().Right().Vertex())
+	case 8:
+		points = append(points, p.Vertex())
+		points = append(points, p.Right().Vertex())
+		points = append(points, p.Down().Vertex())
+		points = append(points, p.Left().Vertex())
+	}
+	a.Points = points
 }
 
 // MapVision is
@@ -90,11 +195,11 @@ func NewMapVision(w, h, v int) *MapVision {
 func (m *MapVision) initAreas() {
 	w, h, v := m.Width, m.Height, m.Vision*2+1
 	var (
-		x1, y1 int
-		x2, y2 int
-		x, y   int
-		i      int
-		areas  [9]*MapArea
+		x1, y1    int
+		x2, y2    int
+		x, y      int
+		i, vertex int
+		areas     [9]*MapArea
 	)
 
 	// first line
@@ -104,19 +209,22 @@ func (m *MapVision) initAreas() {
 	x1 = 0
 	x2, y2 = x1+v-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 1
 	x1 = v
 	x2, y2 = w-v-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 2
 	x1 = w - v
 	x2, y2 = w-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	// second line
 	y1 = v
@@ -126,19 +234,22 @@ func (m *MapVision) initAreas() {
 	x1 = 0
 	x2 = x1 + v - 1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 4
 	x1 = v
 	x2 = w - v - 1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 5
 	x1 = w - v
 	x2 = w - 1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	// the third line
 	y1 = h - v
@@ -147,28 +258,35 @@ func (m *MapVision) initAreas() {
 	x1 = 0
 	x2, y2 = x1+v-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 7
 	x1 = v
 	x2, y2 = w-v-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
 	i = 8
 	x1 = w - v
 	x2, y2 = w-1, y1+v-1
 	x, y = (x2+x1)/2, (y2+y1)/2
-	areas[i] = &MapArea{x1, y1, x2, y2, x, y, 0}
+	vertex = y*w + x
+	areas[i] = &MapArea{i, x1, y1, x2, y2, x, y, vertex, 0, nil}
 
+	// update points
+	for _, a := range areas {
+		a.UpdatePoints(w, h)
+	}
 	m.Areas = areas[:]
 }
 
 func (m *MapVision) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Width: %v, Height: %v, Vision: %v\n", m.Width, m.Height, m.Vision))
-	for i, a := range m.Areas {
-		s := fmt.Sprintf("%v\t\t%v\n", i, a.String())
+	for _, a := range m.Areas {
+		s := fmt.Sprintf("%v\n", a.String())
 		sb.WriteString(s)
 	}
 	sb.WriteString("\n")
@@ -198,24 +316,20 @@ func (m *MapVision) Visit(x, y int) {
 
 // BlindAreas is
 func (m *MapVision) BlindAreas() []*MapArea {
-	blind := make([]*MapArea, 0, 9)
 	for _, a := range m.Areas {
 		count := 0
 		for x := a.X1; x <= a.X2; x++ {
 			for y := a.Y1; y <= a.Y2; y++ {
 				if !m.Pixels[x][y] {
 					count++
-
 				}
 			}
 		}
 		if count == 0 {
-			continue
+			count = 1
 		}
-		b := *a
-		b.Count = count
-		blind = append(blind, &b)
+		a.Count = count
 	}
 
-	return blind
+	return m.Areas
 }
